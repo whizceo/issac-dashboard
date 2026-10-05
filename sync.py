@@ -2,8 +2,9 @@
 """Issac dashboard sync: Instantly + HeyReach + GHL APIs + manual.json -> data.json.
 
 The front end (index.html) only ever reads data.json. Keys never leave this script.
-data.json ships to a PUBLIC GitHub Pages repo, so it holds aggregates only:
-no names, no email addresses, no deal titles.
+The public Pages repo only ever gets data.enc: data.json sealed with AES-GCM under a key
+derived from DASH_PASSWORD (PBKDF2). data.json itself stays local / gitignored, which is
+what lets it carry Issac's calendar (event titles) as well as the aggregates.
 
     python3 scripts/issac/dashboard/sync.py            # write data.json next to this file
     python3 scripts/issac/dashboard/sync.py --publish  # also copy index.html + data.json to the Pages clone
@@ -15,6 +16,8 @@ Env (from AIOS .env or GitHub Actions secrets), each optional:
 A source with no key, or whose call fails, falls back to its last good block in
 data.json, then to the baseline in manual.json. One broken source never blanks the page.
 """
+import base64
+import hashlib
 import json
 import os
 import shutil
@@ -28,8 +31,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 OUT = HERE / "data.json"
+ENC = HERE / "data.enc"
 PAGES = ROOT / "outputs" / "evolv-decks" / "issac-dashboard"
 DAYS = 30
+ISSAC_USER_ID = "hP0Vd26Ni203ZsJfqcOa"  # GHL user; his Google Calendar syncs in as blocked slots
+SALT = bytes.fromhex("6e783159918ef66a7293861904d6dd70")  # fixed, so a key remembered in the browser survives every sync
+KDF_ITER = 250_000
 
 CAMPAIGN_PREFIX = ""  # Instantly workspace is Issac-only; campaigns are named BOTH/BUSINESS/PROPERTY A-B
 INBOX_DOMAINS = ["issacnewtontx.com", "issacnewtoncre.com", "newtoncre.com"]
@@ -273,6 +280,18 @@ def ghl(key, loc):
                 "no_show": sum(1 for e in past if st(e) == "noshow"), "cancelled": sum(1 for e in ev if st(e) == "cancelled"),
                 "upcoming": upcoming[:8], "daily": [{"date": d, "booked": v} for d, v in daily.items()]}
 
+    def calendar():
+        q = urllib.parse.urlencode({"locationId": loc, "userId": ISSAC_USER_ID,
+                                    "startTime": int((now - timedelta(days=14)).timestamp() * 1000),
+                                    "endTime": int((now + timedelta(days=42)).timestamp() * 1000)})
+        busy = http("GET", f"{base}/calendars/blocked-slots?{q}", h).get("events", [])
+        calls = http("GET", f"{base}/calendars/events?{q}", h).get("events", [])
+        rows = [{"title": e.get("title") or "Busy", "start": e["startTime"], "end": e["endTime"], "kind": kind}
+                for kind, evs in (("event", busy), ("call", calls)) for e in evs
+                if not e.get("deleted") and e.get("startTime") and e.get("endTime")
+                and str(e.get("appointmentStatus", "")).lower() not in ("cancelled", "invalid")]
+        return sorted(rows, key=lambda r: r["start"])
+
     def conversations():
         cs, by = http("GET", f"{base}/conversations/search?locationId={loc}&limit=100", h).get("conversations", []), {}
         names = {"TYPE_EMAIL": "Email", "TYPE_SMS": "SMS", "TYPE_CALL": "Call", "TYPE_PHONE": "Call"}
@@ -327,7 +346,7 @@ def ghl(key, loc):
             page += 1
         return {"forms": list(rows.values()), "daily": [{"date": d, "submissions": v} for d, v in daily.items()]}
 
-    result.update(tasks=soft(tasks), workflows=soft(workflows, []), appointments=soft(appointments),
+    result.update(tasks=soft(tasks), workflows=soft(workflows, []), appointments=soft(appointments), calendar=soft(calendar, []),
                   conversations=soft(conversations), contacts=soft(contacts), forms=soft(forms))
     return result
 
@@ -347,10 +366,39 @@ def baseline(manual):
     }
 
 
+def _key(pw):
+    return hashlib.pbkdf2_hmac("sha256", pw.encode(), SALT, KDF_ITER)
+
+
+def seal(text, pw):
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    iv = os.urandom(12)
+    ct = AESGCM(_key(pw)).encrypt(iv, text.encode(), None)
+    return {"v": 1, "kdf": "PBKDF2-SHA256", "iter": KDF_ITER, "salt": SALT.hex(), "iv": iv.hex(),
+            "ct": base64.b64encode(ct).decode()}
+
+
+def unseal(d, pw):
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    return AESGCM(_key(pw)).decrypt(bytes.fromhex(d["iv"]), base64.b64decode(d["ct"]), None).decode()
+
+
+def previous(pw):
+    if OUT.exists():
+        return json.loads(OUT.read_text())
+    if ENC.exists() and pw:
+        try:
+            return json.loads(unseal(json.loads(ENC.read_text()), pw))
+        except Exception:
+            pass
+    return {}
+
+
 def main():
     load_env()
     manual = json.loads((HERE / "manual.json").read_text())
-    prev = json.loads(OUT.read_text()) if OUT.exists() else {}
+    pw = os.getenv("DASH_PASSWORD")
+    prev = previous(pw)
     base = baseline(manual)
 
     jobs = {
@@ -376,13 +424,19 @@ def main():
     out = {"generated_at": now_iso(), "client": "Issac Newton", "brokerage": "eXp Commercial",
            "machine_live_since": manual.get("machine_live_since"),
            **data, "list": manual["list"], "content": manual["content"], "website": manual["website"]}
-    OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    blob = json.dumps(out, indent=1, ensure_ascii=False)
+    OUT.write_text(blob)
+    if pw:
+        ENC.write_text(json.dumps(seal(blob, pw)))
+        log.append(f"sealed -> {ENC.name}")
+    else:
+        log.append("DASH_PASSWORD missing: data.enc NOT updated")
     print("\n".join(log), f"\n-> {OUT}")
 
     if "--publish" in sys.argv:
         PAGES.mkdir(parents=True, exist_ok=True)
         shutil.copy(HERE / "index.html", PAGES / "index.html")
-        shutil.copy(OUT, PAGES / "data.json")
+        shutil.copy(ENC, PAGES / "data.enc")  # never the plaintext
         print(f"-> {PAGES}")
 
 

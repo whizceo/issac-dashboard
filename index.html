@@ -13,6 +13,7 @@
   --sig:#e42b0c;--amber:#ff8a3d;--gold:#ffc38a;--ok:#5fd39a;--err:#ff5a4f;--side:252px;
   --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--sans:'Inter',system-ui,-apple-system,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font:13px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
 a{color:inherit}
@@ -201,6 +202,40 @@ svg text.big{font-family:var(--sans);font-weight:300;fill:#fff}
 #tip b{color:#fff;font-weight:500}
 .err{padding:60px;color:var(--mute)}
 
+/* ---------- calendar ---------- */
+.cbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.cbar button{background:rgba(0,0,0,.25);border:1px solid var(--line2);color:var(--ink);font:12px var(--sans);padding:6px 12px;border-radius:8px;cursor:pointer}
+.cbar button:hover{border-color:var(--ink2)}
+.cbar>b{font-weight:400;font-size:14px;margin-left:6px}
+.cbar .lg{margin-left:auto;display:flex;align-items:center;gap:7px;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.cbar .lg i{width:8px;height:8px;border-radius:2px;margin-left:8px}
+.lg i.event,.cev.event,.cli.event{background:rgba(255,255,255,.06);border-left:2px solid var(--ink2)}
+.lg i.call,.cev.call,.cli.call{background:rgba(228,43,12,.16);border-left:2px solid var(--sig)}
+.cal{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ch0,.chd{padding:10px 6px;border-bottom:1px solid var(--line);font:10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:center}
+.chd b{display:block;font:300 20px var(--sans);letter-spacing:0;color:var(--ink);margin-top:2px}
+.chd.now b{color:var(--sig)}
+.ch0.kl{display:flex;align-items:center;justify-content:center;font-size:8.5px;letter-spacing:.06em}
+.cad{border-bottom:1px solid var(--line2);border-left:1px solid var(--line);padding:3px;min-height:30px;display:grid;gap:3px;align-content:start}
+.cad .cev{position:static;padding:3px 6px}
+.chr div{height:var(--h);font:9.5px var(--mono);color:var(--dim);text-align:right;padding:0 8px;transform:translateY(-6px)}
+.chr div:first-child{visibility:hidden}
+.ccol{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--h)}
+.ccol.now{background-color:rgba(228,43,12,.025)}
+.cnow{position:absolute;left:0;right:0;height:1px;background:var(--sig);z-index:2}
+.cnow::before{content:'';position:absolute;left:-4px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--sig)}
+.cev{position:absolute;border-radius:5px;padding:4px 6px;overflow:hidden;font-size:11px;line-height:1.25;cursor:default}
+.cev b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cev span{display:block;font:9.5px var(--mono);color:var(--mute);margin-top:2px;white-space:nowrap}
+.clist{display:none}
+.cld{padding:12px 0;border-top:1px solid var(--line)}
+.cld.now .kl{color:var(--sig)}
+.cld p{color:var(--dim);font-size:12px;margin-top:6px}
+.cli{display:flex;gap:12px;margin-top:8px;padding:8px 10px;border-radius:6px;font-size:13px}
+.cli span{font:11px var(--mono);color:var(--mute);flex:none;width:62px}
+.cli b{font-weight:400}
+@media (max-width:900px){.cal{display:none}.clist{display:block}.cbar .lg{display:none}}
+
 @media (max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.inb{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
   body{overflow:auto}.app{display:block;height:auto}
@@ -231,7 +266,7 @@ svg text.big{font-family:var(--sans);font-weight:300;fill:#fff}
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 </head>
 <body>
-<div class="gate" id="gate"><form id="gf" autocomplete="on">
+<div class="gate" id="gate"><form id="gf" autocomplete="on" onsubmit="return false">
   <div class="k">Newton Control Room</div>
   <h1>Enter password</h1>
   <input type="password" id="gp" autocomplete="current-password" autofocus aria-label="Password">
@@ -657,6 +692,41 @@ function pFollow() {
   return {html, draw};
 }
 
+/* Issac's GHL calendar (his Google Calendar syncs in), shown as a week in Texas time */
+let CALW = 0;
+const CT = 'America/Chicago';
+const ctDay = t => new Date(t).toLocaleDateString('en-CA', {timeZone: CT});
+const ctMin = t => { const p = new Intl.DateTimeFormat('en-US', {timeZone: CT, hour: 'numeric', minute: 'numeric', hourCycle: 'h23'}).formatToParts(new Date(t)); return +p.find(x => x.type === 'hour').value * 60 + +p.find(x => x.type === 'minute').value };
+const ctTime = t => new Date(t).toLocaleTimeString('en-US', {timeZone: CT, hour: 'numeric', minute: '2-digit'});
+function calWeek(dir) { CALW = dir === 0 ? 0 : CALW + dir; route() }
+function pCalendar() {
+  const ev = (D.ghl && D.ghl.calendar) || [], HPX = 46;
+  const t0 = new Date(ctDay(Date.now()) + 'T12:00:00Z'); t0.setUTCDate(t0.getUTCDate() - t0.getUTCDay() + CALW * 7);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(t0); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10) });
+  const today = ctDay(Date.now()), inWeek = e => days.includes(ctDay(e.start));
+  const rows = ev.filter(inWeek).map(e => { const s = ctMin(e.start), len = (new Date(e.end) - new Date(e.start)) / 6e4;
+    return {...e, day: ctDay(e.start), s, e: Math.min(1440, s + Math.max(len, 15)), all: len >= 1380} });
+  const timed = rows.filter(r => !r.all), allday = rows.filter(r => r.all);
+  const h0 = Math.min(7, ...timed.map(r => Math.floor(r.s / 60))), h1 = Math.max(21, ...timed.map(r => Math.ceil(r.e / 60)));
+  const fmtD = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', {timeZone: 'UTC', month: 'short', day: 'numeric'});
+  const col = d => { const xs = timed.filter(r => r.day === d).sort((a, b) => a.s - b.s), lanes = [];
+    xs.forEach(r => { let k = lanes.findIndex(end => end <= r.s); if (k < 0) k = lanes.push(0) - 1; lanes[k] = r.e; r.lane = k });
+    const n = Math.max(1, lanes.length);
+    return xs.map(r => `<div class="cev ${r.kind}" style="top:${(r.s / 60 - h0) * HPX}px;height:${Math.max(20, (r.e - r.s) / 60 * HPX - 2)}px;left:calc(${r.lane / n * 100}% + 2px);width:calc(${100 / n}% - 4px)" data-tip="<b>${esc(r.title)}</b><br>${ctTime(r.start)} – ${ctTime(r.end)} CT"><b>${esc(r.title)}</b><span>${ctTime(r.start)} – ${ctTime(r.end)}</span></div>`).join('') };
+  const head = `<div class="cbar"><button onclick="calWeek(-1)" aria-label="Previous week">‹</button><button onclick="calWeek(0)">Today</button><button onclick="calWeek(1)" aria-label="Next week">›</button><b>${fmtD(days[0])} – ${fmtD(days[6])}</b><span class="lg"><i class="event"></i>Calendar<i class="call"></i>Booked call</span></div>`;
+  const grid = `<div class="cal" style="--h:${HPX}px">
+    <div class="ch0"></div>${days.map(d => `<div class="chd ${d === today ? 'now' : ''}">${new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', {timeZone: 'UTC', weekday: 'short'})}<b>${+d.slice(8)}</b></div>`).join('')}
+    <div class="ch0 kl">All day</div>${days.map(d => `<div class="cad">${allday.filter(r => r.day === d).map(r => `<div class="cev ${r.kind}" data-tip="<b>${esc(r.title)}</b>"><b>${esc(r.title)}</b></div>`).join('')}</div>`).join('')}
+    <div class="chr">${[...Array(h1 - h0)].map((_, i) => `<div>${((h0 + i + 11) % 12) + 1} ${h0 + i < 12 ? 'AM' : 'PM'}</div>`).join('')}</div>
+    ${days.map(d => `<div class="ccol ${d === today ? 'now' : ''}" style="height:${(h1 - h0) * HPX}px">${d === today ? `<div class="cnow" style="top:${(ctMin(Date.now()) / 60 - h0) * HPX}px"></div>` : ''}${col(d)}</div>`).join('')}
+  </div>`;
+  const list = `<div class="clist">${days.map(d => { const xs = rows.filter(r => r.day === d).sort((a, b) => a.all - b.all || a.s - b.s);
+    return `<div class="cld ${d === today ? 'now' : ''}"><div class="kl">${new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', {timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric'})}</div>${xs.length ? xs.map(r => `<div class="cli ${r.kind}"><span>${r.all ? 'All day' : ctTime(r.start)}</span><b>${esc(r.title)}</b></div>`).join('') : '<p>Nothing scheduled</p>'}</div>` }).join('')}</div>`;
+  const html = `<div class="g">${panel({span: 12, title: 'Calendar', sub: 'Your GoHighLevel calendar, Google Calendar included · Texas time (CT) · refreshes hourly', src: 'ghl',
+    body: ev.length || D.ghl.connected ? head + grid + list : empty('Calendar appears once GoHighLevel connects', 'GET /calendars/blocked-slots')})}</div>`;
+  return {html, draw: () => {}};
+}
+
 function pCalls() {
   const a = D.ghl.appointments, m = M(), up = (a && a.upcoming) || [];
   const tx = iso => new Date(iso).toLocaleString('en-US', {timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
@@ -761,6 +831,7 @@ const ICON = {
   pipeline: '<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>',
   followups: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>',
   contacts: '<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20a6 6 0 0 0-4-5.6"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   calls: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
   territory: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   website: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
@@ -773,6 +844,7 @@ const PAGES = [
   // {id: 'content', label: 'LinkedIn content', src: 'content', fn: pContent},  // hidden until LinkedIn content is connected
   {id: 'pipeline', label: 'CRM pipeline', grp: 'Revenue', src: 'ghl', fn: pPipeline},
   {id: 'followups', label: 'Follow-ups & automations', src: 'ghl', fn: pFollow},
+  {id: 'calendar', label: 'Calendar', src: 'ghl', fn: pCalendar},
   {id: 'calls', label: 'Calls', src: 'ghl', fn: pCalls},
   {id: 'contacts', label: 'Contacts & forms', src: 'ghl', fn: pContacts},
   {id: 'territory', label: 'Territory', grp: 'Market', src: 'list', fn: pTerritory},
@@ -869,22 +941,30 @@ document.addEventListener('pointerout', e => { const c = e.target.closest && e.t
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => CUR && CUR(), 150) });
 addEventListener('hashchange', route);
 
-function boot() {
-  fetch('data.json?t=' + Date.now()).then(r => r.json()).then(d => {
-    D = DEMO ? demo(d) : d;
-    chrome(); route();
-  }).catch(e => { $('#view').innerHTML = `<div class="err">Could not load data.json · ${esc(e.message)}</div>` });
+/* data.enc = data.json sealed with AES-GCM; key = PBKDF2(password). The key is remembered per browser. */
+const b16 = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
+const unhex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+async function derive(pw, E) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'PBKDF2', hash: 'SHA-256', salt: b16(E.salt), iterations: E.iter}, base, {name: 'AES-GCM', length: 256}, true, ['decrypt']);
 }
-const GATE_H = 'dac642c75369a43f8f3a4c9270a5bb8d3c41e5cf97534a274747b530d9a75eb0';
-const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
-function unlock() { $('#gate').remove(); boot() }
-let ok = false; try { ok = localStorage.getItem('ncr_gate') === GATE_H } catch (e) {}
-if (ok) unlock();
-else $('#gf').addEventListener('submit', async e => {
-  e.preventDefault();
-  if (await sha($('#gp').value) === GATE_H) { try { localStorage.setItem('ncr_gate', GATE_H) } catch (e) {} unlock() }
-  else { const g = $('#gate'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); $('#gn').textContent = 'Wrong password'; $('#gp').select() }
-});
+async function open_(E, key) {
+  const ct = Uint8Array.from(atob(E.ct), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b16(E.iv)}, key, ct)));
+}
+function start(d) { $('#gate').remove(); D = DEMO ? demo(d) : d; chrome(); route() }
+fetch('data.enc?t=' + Date.now()).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() }).then(async E => {
+  let saved = null; try { saved = localStorage.getItem('ncr_key') } catch (e) {}
+  if (saved) try { return start(await open_(E, await crypto.subtle.importKey('raw', b16(saved), 'AES-GCM', false, ['decrypt']))) } catch (e) {}
+  $('#gf').addEventListener('submit', async ev => {
+    ev.preventDefault(); const btn = $('#gf button'); btn.disabled = true; $('#gn').textContent = '';
+    try {
+      const key = await derive($('#gp').value, E), d = await open_(E, key);
+      try { localStorage.setItem('ncr_key', unhex(await crypto.subtle.exportKey('raw', key))) } catch (e) {}
+      start(d);
+    } catch (e) { const g = $('#gate'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); $('#gn').textContent = 'Wrong password'; $('#gp').select(); btn.disabled = false }
+  });
+}).catch(e => { $('#gn').textContent = 'Could not load data · ' + e.message });
 </script>
 </body>
 </html>

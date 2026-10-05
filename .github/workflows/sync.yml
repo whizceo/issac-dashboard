@@ -17,16 +17,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Pull Instantly + HeyReach + GHL into data.json
+      - run: pip install -q cryptography
+      - name: Pull Instantly + HeyReach + GHL, seal into data.enc
         env:
           INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
           HEYREACH_API_KEY: ${{ secrets.HEYREACH_API_KEY }}
           GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
           GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+          DASH_PASSWORD: ${{ secrets.DASH_PASSWORD }}
         run: python sync.py
       - name: Commit if changed
         run: |
           git config user.name "evolv-sync"
           git config user.email "actions@users.noreply.github.com"
-          git add data.json
+          git add data.enc
           git diff --cached --quiet || (git commit -m "sync: $(date -u +%FT%H:%MZ)" && git push)
