@@ -165,6 +165,7 @@ svg text.big{font-family:var(--sans);font-weight:300;fill:#fff}
 .stat b{font-weight:300;font-size:26px;letter-spacing:-.03em;font-feature-settings:'tnum'}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:18px}
 .note{color:var(--mute);font-size:12px;border-left:2px solid var(--sig);padding:2px 0 2px 12px;margin-top:14px}
+.seg{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.seg button{font:11px var(--mono);letter-spacing:.04em;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--mute);cursor:pointer}.seg button.on{color:#fff;border-color:var(--sig);background:rgba(228,43,12,.14)}
 .empty{height:100%;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;padding:20px;
   border:1px dashed rgba(255,255,255,.11);border-radius:14px;color:var(--mute);background:repeating-linear-gradient(135deg,rgba(255,255,255,.014) 0 8px,transparent 8px 16px)}
 .empty b{font-weight:400;color:var(--ink2);font-size:12.5px;max-width:360px}
@@ -657,10 +658,14 @@ function pCalls() {
 
 function pTerritory() {
   const L = D.list || {}, r = L.registry || {}, ip = L.in_play || {}, u = L.universe || {}, top = Object.entries(r.by_county || {}).sort((a, b) => b[1] - a[1]);
-  const ipt = sum(Object.values(ip));
+  const ipt = sum(Object.values(ip)), dbs = L.databases || {};
+  const DB = [['Business owners', 'business_owners', 'own a Texas business'], ['Property owners', 'property_owners', 'own commercial property'], ['Business + property', 'both_owners', 'own both']].filter(x => dbs[x[1]]);
   const html = `<div class="g">
     <div class="s12 kpis">${kpi('Registry', fmt(r.total), 'cleared all four gates', {accent: 1})}${kpi('Counties', fmt(top.length), 'with at least one owner')}${kpi('Top 5 counties', pctf(sum(top.slice(0, 5).map(x => x[1])), r.total, 0), 'share of the registry')}${kpi('In play', fmt(ipt), 'owners in the live sequences')}${kpi('With email', fmt(L.with_email), L.with_email != null && ipt ? pctf(L.with_email, ipt, 0) + ' of in play' : '')}${kpi('With LinkedIn', fmt(L.with_linkedin), L.with_linkedin != null && ipt ? pctf(L.with_linkedin, ipt, 0) + ' of in play' : 'enrichment pending')}</div>
     ${panel({span: 12, title: 'Texas owner map', sub: `${esc(r.gates || '')} · hover any county`, src: 'list', body: `<div class="map big" id="tr-map"></div>${mapLegend()}`})}
+    ${DB.length ? `<div class="s12 kpis">${DB.map(([l, k, sub], i) => kpi(l, fmt(dbs[k].total), `${sub} · ${fmt(Object.keys(dbs[k].by_county).length)} counties`, {accent: !i})).join('')}${kpi('All three', fmt(sum(DB.map(([, k]) => dbs[k].total))), 'owner records in BigQuery')}</div>
+    ${panel({span: 7, title: 'Owner databases by county', sub: `BigQuery snapshot · ${esc(L.databases_updated || '')} · switch the database`, src: 'list', body: `<div class="seg" id="db-seg">${DB.map(([l, k], i) => `<button data-k="${k}" class="${i ? '' : 'on'}">${l}</button>`).join('')}</div><div class="map" id="db-map" style="height:420px"></div>`})}
+    ${panel({span: 5, title: 'Top counties', sub: 'For the selected database', body: '<div id="db-top"></div><div class="note" id="db-note"></div>'})}` : ''}
     ${panel({span: 5, title: 'County leaderboard', sub: 'Top 15 of ' + top.length, body: hbars(top.slice(0, 15))})}
     ${panel({span: 7, title: 'By metro', sub: 'Where the owners are', body: '<div class="ch" id="tr-metro" style="height:300px"></div>'})}
     ${panel({span: 4, title: 'Years trading', sub: 'His preferred band: 10–30 years', body: '<div class="ch" id="tr-age" style="height:200px"></div>'})}
@@ -671,6 +676,13 @@ function pTerritory() {
   </div>`;
   const draw = () => {
     txMap($('#tr-map'), r.by_county, {pillars: 16, labels: 6});
+    const showDb = k => { const c = dbs[k].by_county, e = Object.entries(c), n = e.length;
+      document.querySelectorAll('#db-seg button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+      $('#db-map').innerHTML = ''; txMap($('#db-map'), c, {pillars: Math.min(12, n), labels: Math.min(4, n)});
+      $('#db-top').innerHTML = hbars(e.slice(0, 12));
+      $('#db-note').textContent = n < 10 ? `Property records come from ${n} county appraisal districts only: ${e.map(x => x[0]).join(', ')}.` : `${fmt(n)} of 254 Texas counties covered.`;
+    };
+    if (DB.length) { showDb(DB[0][1]); document.querySelectorAll('#db-seg button').forEach(b => b.onclick = () => showDb(b.dataset.k)) }
     bars3d($('#tr-metro'), Object.entries(r.by_metro || {}).map(([k, v], i) => ({label: k, value: v, color: mix(C.sig, C.gold, i / 4)})));
     donut($('#tr-age'), Object.entries(r.by_age || {}).map(([k, v], i) => ({label: k + ' yrs', value: v, color: [C.amber, C.sig, C.gold, '#6b6560'][i % 4]})));
     bars3d($('#tr-match'), Object.entries(r.by_match || {}).map(([k, v], i) => ({label: k, value: v, color: mix(C.sig, '#6b6560', i / 4)})));
