@@ -215,6 +215,19 @@ def ghl(key, loc):
                 who = "A seller" if key_ == "seller" else "A buyer"
                 activity.append({"at": ts, "kind": key_, "text": f"{who} moved to {r['stage']}"})
         result[key_] = list(rows.values())
+
+    # The other two pipelines in the account: stage counts only, no activity feed.
+    for key_, name in (("marketing", "marketing pipeline"), ("outreach", "seller outreach pipeline")):
+        p = next((x for x in pipes if x["name"].strip().lower() == name), None)
+        if not p:
+            continue
+        stages = sorted(p["stages"], key=lambda s: s.get("position", 0))
+        rows = []
+        for st in stages:  # one call per stage, read meta.total: the outreach pipeline holds 5k+ cards
+            q = urllib.parse.urlencode({"location_id": loc, "pipeline_id": p["id"], "pipeline_stage_id": st["id"],
+                                        "status": "open", "limit": 1})
+            rows.append({"stage": st["name"], "count": (http("GET", f"{base}/opportunities/search?{q}", h).get("meta") or {}).get("total", 0), "value": 0})
+        result[key_] = rows
     activity.sort(key=lambda a: a["at"], reverse=True)
     result["activity"] = activity[:8]
 
@@ -270,8 +283,52 @@ def ghl(key, loc):
                 "awaiting_us": sum(1 for c in cs if c.get("lastMessageDirection") == "inbound"),
                 "awaiting_them": sum(1 for c in cs if c.get("lastMessageDirection") == "outbound")}
 
+    def contacts():
+        # Full scan via searchAfter: ~21 calls of 500 for 10k contacts. Aggregates only.
+        body, n, new30, by, daily = {"locationId": loc, "pageLimit": 500}, 0, 0, {}, {d: 0 for d in day_range()}
+        names = {"csv_import": "CSV import", "form": "Form", "calendar": "Calendar", "manual": "Manual",
+                 "api": "API / integration", "survey": "Survey", "chat_widget": "Chat widget"}
+        for _ in range(60):
+            r = http("POST", f"{base}/contacts/search", h, body)
+            cs = r.get("contacts", [])
+            for c in cs:
+                n += 1
+                med = (c.get("attributionSource") or {}).get("medium") or ""
+                k = names.get(med, med.replace("_", " ").capitalize() or "Unknown")
+                by[k] = by.get(k, 0) + 1
+                a = ts(c.get("dateAdded"))
+                if a and a >= since:
+                    new30 += 1
+                    if a.date().isoformat() in daily:
+                        daily[a.date().isoformat()] += 1
+            if len(cs) < 500 or not cs[-1].get("searchAfter"):
+                break
+            body["searchAfter"] = cs[-1]["searchAfter"]
+        return {"total": r.get("total", n), "new_30d": new30,
+                "by_source": dict(sorted(by.items(), key=lambda x: -x[1])),
+                "daily": [{"date": d, "added": v} for d, v in daily.items()]}
+
+    def forms():
+        fs = http("GET", f"{base}/forms/?locationId={loc}&limit=50", h).get("forms", [])
+        rows = {f["id"]: {"name": f.get("name", ""), "total": 0, "last_30d": 0} for f in fs}
+        daily, page = {d: 0 for d in day_range()}, 1
+        while True:
+            r = http("GET", f"{base}/forms/submissions?locationId={loc}&limit=100&page={page}", h)
+            for x in r.get("submissions", []):
+                row = rows.setdefault(x.get("formId"), {"name": "Other form", "total": 0, "last_30d": 0})
+                row["total"] += 1
+                a = ts(x.get("createdAt"))
+                if a and a >= since:
+                    row["last_30d"] += 1
+                    if a.date().isoformat() in daily:
+                        daily[a.date().isoformat()] += 1
+            if not (r.get("meta") or {}).get("nextPage") or page >= 50:
+                break
+            page += 1
+        return {"forms": list(rows.values()), "daily": [{"date": d, "submissions": v} for d, v in daily.items()]}
+
     result.update(tasks=soft(tasks), workflows=soft(workflows, []), appointments=soft(appointments),
-                  conversations=soft(conversations))
+                  conversations=soft(conversations), contacts=soft(contacts), forms=soft(forms))
     return result
 
 
