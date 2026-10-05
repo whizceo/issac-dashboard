@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-05T12:08:24+00:00",
+ "generated_at": "2026-10-05T15:53:34+00:00",
  "client": "Issac Newton",
  "brokerage": "eXp Commercial",
  "machine_live_since": null,
@@ -285,7 +285,7 @@
    }
   ],
   "connected": true,
-  "synced_at": "2026-10-05T12:08:20+00:00"
+  "synced_at": "2026-10-05T15:53:14+00:00"
  },
  "heyreach": {
   "campaigns": [
@@ -304,11 +304,11 @@
    "active": 1
   },
   "status": "live",
-  "requests_sent": 18,
+  "requests_sent": 19,
   "accepted": 1,
   "messages_sent": 0,
   "replies": 0,
-  "profile_views": 60,
+  "profile_views": 61,
   "daily": [
    {
     "date": "2026-09-06",
@@ -457,12 +457,12 @@
    },
    {
     "date": "2026-10-05",
-    "requests": 0,
+    "requests": 1,
     "replies": 0
    }
   ],
   "connected": true,
-  "synced_at": "2026-10-05T12:08:23+00:00"
+  "synced_at": "2026-10-05T15:53:17+00:00"
  },
  "ghl": {
   "status": "live",
@@ -576,6 +576,120 @@
    },
    {
     "stage": "Closing",
+    "count": 0,
+    "value": 0
+   }
+  ],
+  "marketing": [
+   {
+    "stage": "New Lead",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Initial Contact",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Qualification",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Appointment Scheduled",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Appointment Completed",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "No Show",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Initial Consultation",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Property Search or Listing Prep",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Showings and Tours",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Offer & Negotiation",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Under Contract / Escrow",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Closing Coordination",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Closed & Follow-Up",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Review Request",
+    "count": 0,
+    "value": 0
+   }
+  ],
+  "outreach": [
+   {
+    "stage": "New Lead",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Sequence Active",
+    "count": 10079,
+    "value": 0
+   },
+   {
+    "stage": "Responded",
+    "count": 13,
+    "value": 0
+   },
+   {
+    "stage": "Interested",
+    "count": 12,
+    "value": 0
+   },
+   {
+    "stage": "Call Booked",
+    "count": 1,
+    "value": 0
+   },
+   {
+    "stage": "Closed Lost",
+    "count": 5,
+    "value": 0
+   },
+   {
+    "stage": "Not Interested",
+    "count": 2,
+    "value": 0
+   },
+   {
+    "stage": "No Response",
     "count": 0,
     "value": 0
    }
@@ -856,8 +970,286 @@
    "awaiting_us": 10,
    "awaiting_them": 90
   },
+  "contacts": {
+   "total": 10180,
+   "new_30d": 13,
+   "by_source": {
+    "CSV import": 10086,
+    "Unknown": 92,
+    "Calendar": 1,
+    "Manual": 1
+   },
+   "daily": [
+    {
+     "date": "2026-09-06",
+     "added": 0
+    },
+    {
+     "date": "2026-09-07",
+     "added": 0
+    },
+    {
+     "date": "2026-09-08",
+     "added": 1
+    },
+    {
+     "date": "2026-09-09",
+     "added": 1
+    },
+    {
+     "date": "2026-09-10",
+     "added": 4
+    },
+    {
+     "date": "2026-09-11",
+     "added": 1
+    },
+    {
+     "date": "2026-09-12",
+     "added": 0
+    },
+    {
+     "date": "2026-09-13",
+     "added": 2
+    },
+    {
+     "date": "2026-09-14",
+     "added": 2
+    },
+    {
+     "date": "2026-09-15",
+     "added": 1
+    },
+    {
+     "date": "2026-09-16",
+     "added": 1
+    },
+    {
+     "date": "2026-09-17",
+     "added": 0
+    },
+    {
+     "date": "2026-09-18",
+     "added": 0
+    },
+    {
+     "date": "2026-09-19",
+     "added": 0
+    },
+    {
+     "date": "2026-09-20",
+     "added": 0
+    },
+    {
+     "date": "2026-09-21",
+     "added": 0
+    },
+    {
+     "date": "2026-09-22",
+     "added": 0
+    },
+    {
+     "date": "2026-09-23",
+     "added": 0
+    },
+    {
+     "date": "2026-09-24",
+     "added": 0
+    },
+    {
+     "date": "2026-09-25",
+     "added": 0
+    },
+    {
+     "date": "2026-09-26",
+     "added": 0
+    },
+    {
+     "date": "2026-09-27",
+     "added": 0
+    },
+    {
+     "date": "2026-09-28",
+     "added": 0
+    },
+    {
+     "date": "2026-09-29",
+     "added": 0
+    },
+    {
+     "date": "2026-09-30",
+     "added": 0
+    },
+    {
+     "date": "2026-10-01",
+     "added": 0
+    },
+    {
+     "date": "2026-10-02",
+     "added": 0
+    },
+    {
+     "date": "2026-10-03",
+     "added": 0
+    },
+    {
+     "date": "2026-10-04",
+     "added": 0
+    },
+    {
+     "date": "2026-10-05",
+     "added": 0
+    }
+   ]
+  },
+  "forms": {
+   "forms": [
+    {
+     "name": "Lead Capture Form",
+     "total": 0,
+     "last_30d": 0
+    },
+    {
+     "name": "Contact Us",
+     "total": 0,
+     "last_30d": 0
+    },
+    {
+     "name": "Newsletter Subscriptions",
+     "total": 0,
+     "last_30d": 0
+    },
+    {
+     "name": "Marketing Form - Claim Offer",
+     "total": 0,
+     "last_30d": 0
+    }
+   ],
+   "daily": [
+    {
+     "date": "2026-09-06",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-07",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-08",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-09",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-10",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-11",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-12",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-13",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-14",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-15",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-16",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-17",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-18",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-19",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-20",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-21",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-22",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-23",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-24",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-25",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-26",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-27",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-28",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-29",
+     "submissions": 0
+    },
+    {
+     "date": "2026-09-30",
+     "submissions": 0
+    },
+    {
+     "date": "2026-10-01",
+     "submissions": 0
+    },
+    {
+     "date": "2026-10-02",
+     "submissions": 0
+    },
+    {
+     "date": "2026-10-03",
+     "submissions": 0
+    },
+    {
+     "date": "2026-10-04",
+     "submissions": 0
+    },
+    {
+     "date": "2026-10-05",
+     "submissions": 0
+    }
+   ]
+  },
   "connected": true,
-  "synced_at": "2026-10-05T12:08:24+00:00"
+  "synced_at": "2026-10-05T15:53:34+00:00"
  },
  "list": {
   "universe": {
