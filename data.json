@@ -1,40 +1,72 @@
 {
- "generated_at": "2026-09-23T13:45:44+00:00",
+ "generated_at": "2026-10-05T12:07:27+00:00",
  "client": "Issac Newton",
  "brokerage": "eXp Commercial",
  "machine_live_since": null,
  "instantly": {
-  "status": "draft",
-  "note": "3 campaigns built, not launched. 9 inboxes warming since 4 Sep.",
+  "status": "live",
   "campaigns": [
    {
-    "name": "Both",
-    "status": "draft",
-    "in_campaign": 0,
-    "contacted": 0,
-    "sent": 0,
+    "name": "Both B",
+    "status": "live",
+    "in_campaign": 222,
+    "contacted": 5,
+    "sent": 6,
     "replies": 0,
     "positive": 0,
     "bounced": 0,
     "unsubscribed": 0
    },
    {
-    "name": "Business",
-    "status": "draft",
-    "in_campaign": 0,
-    "contacted": 0,
-    "sent": 0,
+    "name": "Business B",
+    "status": "live",
+    "in_campaign": 804,
+    "contacted": 4,
+    "sent": 4,
     "replies": 0,
     "positive": 0,
     "bounced": 0,
     "unsubscribed": 0
    },
    {
-    "name": "Property",
-    "status": "draft",
-    "in_campaign": 0,
-    "contacted": 0,
-    "sent": 0,
+    "name": "Property B",
+    "status": "live",
+    "in_campaign": 622,
+    "contacted": 6,
+    "sent": 6,
+    "replies": 0,
+    "positive": 0,
+    "bounced": 0,
+    "unsubscribed": 0
+   },
+   {
+    "name": "Property A",
+    "status": "live",
+    "in_campaign": 620,
+    "contacted": 6,
+    "sent": 8,
+    "replies": 0,
+    "positive": 0,
+    "bounced": 0,
+    "unsubscribed": 0
+   },
+   {
+    "name": "Both A",
+    "status": "live",
+    "in_campaign": 223,
+    "contacted": 8,
+    "sent": 11,
+    "replies": 0,
+    "positive": 0,
+    "bounced": 0,
+    "unsubscribed": 0
+   },
+   {
+    "name": "Business A",
+    "status": "live",
+    "in_campaign": 804,
+    "contacted": 10,
+    "sent": 19,
     "replies": 0,
     "positive": 0,
     "bounced": 0,
@@ -44,111 +76,63 @@
   "inboxes": [
    {
     "domain": "issacnewtontx.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "issacnewtontx.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "issacnewtontx.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "issacnewtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "issacnewtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "issacnewtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "newtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "newtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    },
    {
     "domain": "newtoncre.com",
-    "warmup": null,
+    "warmup": 100,
     "ok": true
    }
   ],
+  "steps": [
+   {
+    "step": 1,
+    "sent": 39,
+    "replies": 0
+   },
+   {
+    "step": 2,
+    "sent": 15,
+    "replies": 0
+   }
+  ],
   "daily": [
-   {
-    "date": "2026-08-25",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-26",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-27",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-28",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-29",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-30",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-31",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-01",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-02",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-03",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-04",
-    "sent": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-05",
-    "sent": 0,
-    "replies": 0
-   },
    {
     "date": "2026-09-06",
     "sent": 0,
@@ -238,80 +222,94 @@
     "date": "2026-09-23",
     "sent": 0,
     "replies": 0
+   },
+   {
+    "date": "2026-09-24",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-25",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-26",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-27",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-28",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-29",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-30",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-01",
+    "sent": 18,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-02",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-03",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-04",
+    "sent": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-05",
+    "sent": 36,
+    "replies": 0
    }
   ],
-  "connected": false,
-  "synced_at": null
+  "connected": true,
+  "synced_at": "2026-10-05T12:07:17+00:00"
  },
  "heyreach": {
-  "status": "waiting",
-  "note": "Workspace ready. Waiting for Issac's LinkedIn to connect.",
-  "requests_sent": 0,
-  "accepted": 0,
+  "campaigns": [
+   {
+    "name": "Campaign 1",
+    "status": "live",
+    "total": 732,
+    "finished": 0,
+    "in_progress": 220,
+    "pending": 510,
+    "failed": 2
+   }
+  ],
+  "accounts": {
+   "total": 1,
+   "active": 1
+  },
+  "status": "live",
+  "requests_sent": 18,
+  "accepted": 1,
   "messages_sent": 0,
   "replies": 0,
-  "profile_views": 0,
+  "profile_views": 60,
   "daily": [
-   {
-    "date": "2026-08-25",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-26",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-27",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-28",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-29",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-30",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-08-31",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-01",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-02",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-03",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-04",
-    "requests": 0,
-    "replies": 0
-   },
-   {
-    "date": "2026-09-05",
-    "requests": 0,
-    "replies": 0
-   },
    {
     "date": "2026-09-06",
     "requests": 0,
@@ -401,14 +399,73 @@
     "date": "2026-09-23",
     "requests": 0,
     "replies": 0
+   },
+   {
+    "date": "2026-09-24",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-25",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-26",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-27",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-28",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-29",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-09-30",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-01",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-02",
+    "requests": 7,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-03",
+    "requests": 11,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-04",
+    "requests": 0,
+    "replies": 0
+   },
+   {
+    "date": "2026-10-05",
+    "requests": 0,
+    "replies": 0
    }
   ],
-  "connected": false,
-  "synced_at": null
+  "connected": true,
+  "synced_at": "2026-10-05T12:07:22+00:00"
  },
  "ghl": {
-  "status": "draft",
-  "note": "Seller + deal pipelines built. Goes live after test 1.",
+  "status": "live",
   "seller": [
    {
     "stage": "Identified",
@@ -436,12 +493,27 @@
     "value": 0
    },
    {
+    "stage": "Seller Qualified",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Documents Requested",
+    "count": 0,
+    "value": 0
+   },
+   {
+    "stage": "Site Visit Completed",
+    "count": 0,
+    "value": 0
+   },
+   {
     "stage": "Valuation in Progress",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Listing Presentation",
+    "stage": "Valuation Presented",
     "count": 0,
     "value": 0
    },
@@ -451,81 +523,341 @@
     "value": 0
    },
    {
-    "stage": "Signed — Listing Live",
+    "stage": "Listing Agreement Signed",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Offers / Negotiation",
-    "count": 0,
-    "value": 0
-   },
-   {
-    "stage": "Under Contract",
-    "count": 0,
-    "value": 0
-   },
-   {
-    "stage": "Closed",
-    "count": 0,
-    "value": 0
-   },
-   {
-    "stage": "Past Client / Referral",
+    "stage": "Listing Live",
     "count": 0,
     "value": 0
    }
   ],
   "deal": [
    {
-    "stage": "Inquiry Received",
+    "stage": "Buyer Inquiry",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Qualified",
+    "stage": "Buyer Qualified / NDA",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Criteria Defined",
+    "stage": "Showing / Buyer Meeting",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Properties Presented",
+    "stage": "LOI Received",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Tour / Site Visit",
+    "stage": "Negotiation",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "LOI Submitted",
+    "stage": "Purchase Agreement Executed",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Under Contract",
+    "stage": "Under Contract / Due Diligence",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Closed",
+    "stage": "Clear to Close",
     "count": 0,
     "value": 0
    },
    {
-    "stage": "Repeat Buyer / Investor",
+    "stage": "Closing",
     "count": 0,
     "value": 0
    }
   ],
   "activity": [],
-  "connected": false,
-  "synced_at": null
+  "tasks": {
+   "open": 8,
+   "due_today": 0,
+   "overdue": 8,
+   "completed_30d": 28
+  },
+  "workflows": [
+   {
+    "name": "New Workflow : 1777141900199",
+    "status": "draft"
+   },
+   {
+    "name": "Workflow 001: New Lead",
+    "status": "draft"
+   },
+   {
+    "name": "Appointment Confirmation + Reminders 1.0",
+    "status": "draft"
+   },
+   {
+    "name": "FLASH -> New Lead Follow-Up",
+    "status": "draft"
+   },
+   {
+    "name": "JADA -> Review Request",
+    "status": "draft"
+   },
+   {
+    "name": "Missed Call Text-Back 1.0",
+    "status": "draft"
+   },
+   {
+    "name": "NADIA -> Long Term Follow-Up",
+    "status": "draft"
+   },
+   {
+    "name": "New Lead From Form Follow-Up 1.0",
+    "status": "draft"
+   },
+   {
+    "name": "New Workflow : 1776166493443",
+    "status": "draft"
+   },
+   {
+    "name": "No-Show Follow Up-1.0",
+    "status": "draft"
+   },
+   {
+    "name": "Old Lead Re-Engagement 1.0",
+    "status": "draft"
+   },
+   {
+    "name": "REVA -> Database Reactivation",
+    "status": "draft"
+   },
+   {
+    "name": "RESPONSE PROTOCOL Workflow",
+    "status": "published"
+   },
+   {
+    "name": "Seller Outreach Sequence",
+    "status": "published"
+   },
+   {
+    "name": "v2 - Appointment Confirmation + Reminders",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Buyer Inquiry Response and Qualification",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Closing Preparation and Countdown",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Documents Requested Follow-Up",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - FLASH → New Lead Follow-Up",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - JADA - Closed Deal Review Request",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - LOI Received Seller Review",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Listing Signed Launch Checklist",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Missed Call Text-Back",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - NADIA -> Long Term Follow-up",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - NDA Signed Information Release",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - New Lead From Form Follow-Up",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - No-Show Follow Up",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Showing Coordination",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Under Contract Diligence Tracker",
+    "status": "draft"
+   },
+   {
+    "name": "v2 - Valuation In Progress",
+    "status": "draft"
+   },
+   {
+    "name": "v2 – RESPONSE PROTOCOL Workflow",
+    "status": "draft"
+   },
+   {
+    "name": "v2 – Seller Outreach Sequence",
+    "status": "draft"
+   }
+  ],
+  "appointments": {
+   "booked_30d": 0,
+   "showed": 0,
+   "no_show": 0,
+   "cancelled": 0,
+   "upcoming": [],
+   "daily": [
+    {
+     "date": "2026-09-06",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-07",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-08",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-09",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-10",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-11",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-12",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-13",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-14",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-15",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-16",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-17",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-18",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-19",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-20",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-21",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-22",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-23",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-24",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-25",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-26",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-27",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-28",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-29",
+     "booked": 0
+    },
+    {
+     "date": "2026-09-30",
+     "booked": 0
+    },
+    {
+     "date": "2026-10-01",
+     "booked": 0
+    },
+    {
+     "date": "2026-10-02",
+     "booked": 0
+    },
+    {
+     "date": "2026-10-03",
+     "booked": 0
+    },
+    {
+     "date": "2026-10-04",
+     "booked": 0
+    },
+    {
+     "date": "2026-10-05",
+     "booked": 0
+    }
+   ]
+  },
+  "conversations": {
+   "total": 100,
+   "unread": 10,
+   "by_channel": {
+    "SMS": 5,
+    "Email": 95
+   },
+   "awaiting_us": 10,
+   "awaiting_them": 90
+  },
+  "connected": true,
+  "synced_at": "2026-10-05T12:07:27+00:00"
  },
  "list": {
   "universe": {

@@ -1,0 +1,32 @@
+name: Hourly sync
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pull Instantly + HeyReach + GHL into data.json
+        env:
+          INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API_KEY }}
+          HEYREACH_API_KEY: ${{ secrets.HEYREACH_API_KEY }}
+          GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
+          GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+        run: python sync.py
+      - name: Commit if changed
+        run: |
+          git config user.name "evolv-sync"
+          git config user.email "actions@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || (git commit -m "sync: $(date -u +%FT%H:%MZ)" && git push)
