@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-05T12:07:27+00:00",
+ "generated_at": "2026-10-05T12:08:24+00:00",
  "client": "Issac Newton",
  "brokerage": "eXp Commercial",
  "machine_live_since": null,
@@ -285,7 +285,7 @@
    }
   ],
   "connected": true,
-  "synced_at": "2026-10-05T12:07:17+00:00"
+  "synced_at": "2026-10-05T12:08:20+00:00"
  },
  "heyreach": {
   "campaigns": [
@@ -462,7 +462,7 @@
    }
   ],
   "connected": true,
-  "synced_at": "2026-10-05T12:07:22+00:00"
+  "synced_at": "2026-10-05T12:08:23+00:00"
  },
  "ghl": {
   "status": "live",
@@ -857,7 +857,7 @@
    "awaiting_them": 90
   },
   "connected": true,
-  "synced_at": "2026-10-05T12:07:27+00:00"
+  "synced_at": "2026-10-05T12:08:24+00:00"
  },
  "list": {
   "universe": {
