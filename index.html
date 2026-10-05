@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Newton Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060607;--ink:#f3efeb;--ink2:#cfc9c4;--mute:#8e8882;--dim:#55504c;--line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
+  --sig:#e42b0c;--amber:#ff8a3d;--gold:#ffc38a;--ok:#5fd39a;--err:#ff5a4f;--side:252px;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--sans:'Inter',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:13px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+a{color:inherit}
+
+/* control-room backdrop: vermillion bloom, floor grid, one light beam */
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(1100px 620px at 22% -14%,rgba(228,43,12,.22),transparent 60%),
+             radial-gradient(900px 520px at 104% 108%,rgba(255,138,61,.10),transparent 60%),#060607}
+.bgfx::before{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse at 45% 0%,#000 15%,transparent 72%);mask-image:radial-gradient(ellipse at 45% 0%,#000 15%,transparent 72%)}
+.bgfx::after{content:'';position:absolute;top:-40%;left:38%;width:240px;height:180%;
+  background:linear-gradient(90deg,transparent,rgba(255,120,70,.075),transparent);transform:rotate(26deg);filter:blur(34px)}
+
+.app{position:relative;z-index:1;display:grid;grid-template-columns:var(--side) minmax(0,1fr);height:100vh}
+
+/* ---------- sidebar ---------- */
+.side{height:100vh;overflow-y:auto;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px 16px;
+  background:linear-gradient(180deg,rgba(20,14,12,.78),rgba(8,8,9,.78));backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.brand{display:flex;gap:12px;align-items:center;padding:2px 8px 20px}
+.mark{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;font:600 15px var(--sans);color:#fff;
+  background:radial-gradient(circle at 30% 22%,#ff9a70,#e42b0c 55%,#6d1204);box-shadow:0 0 26px rgba(228,43,12,.5),inset 0 1px 0 rgba(255,255,255,.35)}
+.bn{font-weight:500;font-size:14.5px;letter-spacing:-.01em}
+.bs{font:9.5px var(--mono);color:var(--mute);letter-spacing:.16em;text-transform:uppercase}
+.grp{font:9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);padding:16px 10px 7px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;margin:1px 0;border-radius:10px;color:var(--mute);text-decoration:none;font-size:13px;position:relative;transition:color .2s,background .2s}
+.nav a svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav a:hover{color:var(--ink);background:rgba(255,255,255,.035)}
+.nav a.on{color:#fff;background:linear-gradient(90deg,rgba(228,43,12,.24),rgba(228,43,12,.03));box-shadow:inset 0 0 0 1px rgba(228,43,12,.28)}
+.nav a.on::before{content:'';position:absolute;left:-14px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--sig);box-shadow:0 0 14px var(--sig)}
+.nav a .d{margin-left:auto}
+.d{width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;flex:none}
+.d.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}.d.man{background:var(--amber)}.d.err{background:var(--err);box-shadow:0 0 8px var(--err)}
+.sidefoot{margin-top:auto;padding-top:18px}
+.mach{border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:rgba(255,255,255,.025)}
+.mach .kl{margin-bottom:6px}
+.mach b{display:block;font-weight:400;font-size:13px}
+.mach span{color:var(--mute);font-size:11.5px}
+.demolink{display:block;margin-top:10px;font:10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-decoration:none;padding:0 4px}
+.demolink:hover{color:var(--amber)}
+
+/* ---------- main ---------- */
+.main{height:100vh;overflow-y:auto;overflow-x:hidden}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;padding:16px 28px;
+  background:linear-gradient(180deg,rgba(6,6,7,.92),rgba(6,6,7,.6));backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.crumb{font:10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+h1{font-weight:300;font-size:25px;letter-spacing:-.025em;line-height:1.2}
+.tr{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.pill{font:10.5px var(--mono);padding:6px 11px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--mute);white-space:nowrap;display:inline-flex;gap:7px;align-items:center}
+.pill.demo{color:var(--amber);border-color:rgba(255,138,61,.4)}
+#view{padding:22px 28px 64px}
+.g{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.col>.glass:last-child{flex:1}
+
+/* ---------- glass ---------- */
+.glass{position:relative;border-radius:18px;min-width:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.014));border:1px solid var(--line);
+  backdrop-filter:blur(16px) saturate(130%);-webkit-backdrop-filter:blur(16px) saturate(130%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 28px 60px -32px rgba(0,0,0,.95);
+  animation:rise .7s cubic-bezier(.2,.8,.2,1) backwards;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .25s}
+.glass::before{content:'';position:absolute;top:-1px;left:14%;right:14%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,150,110,.55),transparent);opacity:.75}
+.glass::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(440px circle at var(--mx,-999px) var(--my,-999px),rgba(228,43,12,.085),transparent 45%)}
+.glass:hover{border-color:rgba(255,255,255,.12)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+.panel{padding:18px 20px 20px}
+.ph{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+.ph h3{font-weight:400;font-size:14.5px;letter-spacing:-.005em}
+.ph p{color:var(--mute);font-size:12px;margin-top:3px}
+.chip{display:inline-flex;align-items:center;gap:7px;font:9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);
+  padding:5px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;background:rgba(0,0,0,.28);flex:none}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--dim)}
+.chip.live i{background:var(--ok);box-shadow:0 0 8px var(--ok)}.chip.man i{background:var(--amber)}.chip.err i{background:var(--err)}
+.kl{font:9.5px var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--mute)}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+.kpis.k5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi{padding:16px 16px 12px;min-height:140px;display:flex;flex-direction:column;transform-style:preserve-3d;will-change:transform}
+.kv{font-weight:300;font-size:32px;letter-spacing:-.035em;margin-top:9px;font-feature-settings:'tnum';line-height:1.1;transform:translateZ(24px)}
+.ks{color:var(--mute);font-size:11.5px;margin-top:4px;transform:translateZ(12px)}
+.spark{height:34px;margin-top:auto;padding-top:8px}
+.kpi.accent{background:linear-gradient(155deg,rgba(228,43,12,.32),rgba(228,43,12,.06) 62%,rgba(255,255,255,.01));border-color:rgba(228,43,12,.4);
+  box-shadow:0 0 46px -12px rgba(228,43,12,.55),inset 0 1px 0 rgba(255,190,160,.3)}
+.kpi.accent .kl{color:#ffb79f}
+
+/* ---------- charts ---------- */
+.ch{height:240px;position:relative}
+.ch svg,.map svg{display:block;overflow:visible}
+svg text{font-family:var(--mono);font-size:9.5px;fill:var(--mute)}
+svg text.bv{fill:var(--ink);font-size:10.5px}
+svg text.fl{font-family:var(--sans);font-size:12px;fill:var(--ink2)}
+svg text.fv{font-family:var(--sans);font-size:16px;font-weight:300;fill:#fff}
+svg text.fc{fill:var(--amber);font-size:10px}
+svg text.big{font-family:var(--sans);font-weight:300;fill:#fff}
+.grid-l{stroke:rgba(255,255,255,.06)}
+.hit{fill:transparent}.hit:hover{fill:rgba(255,255,255,.035)}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow 1s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes grow{from{transform:scaleY(0)}}
+.rise3{animation:rise3 .8s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes rise3{from{opacity:0;transform:translateY(-14px)}}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.3);opacity:0}}
+.sweep{animation:sweep 7s linear infinite}
+@keyframes sweep{from{transform:translateX(-35%)}to{transform:translateX(135%)}}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font:10px var(--mono);letter-spacing:.06em;color:var(--mute);margin-bottom:10px;text-transform:uppercase}
+.lg span{display:inline-flex;gap:7px;align-items:center}
+.lg i{width:9px;height:9px;border-radius:3px;box-shadow:0 0 8px currentColor}
+.map{height:440px;position:relative;perspective:1600px}
+.map.big{height:600px}
+.panel.fill{display:flex;flex-direction:column}.panel.fill .map{flex:1;min-height:440px}
+.map>svg{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.maplg{display:flex;align-items:center;gap:10px;font:9.5px var(--mono);color:var(--mute);letter-spacing:.08em;text-transform:uppercase;margin-top:6px;flex-wrap:wrap}
+.maplg i{width:140px;height:6px;border-radius:6px;background:linear-gradient(90deg,rgba(228,43,12,.06),rgba(228,43,12,.85));box-shadow:0 0 10px rgba(228,43,12,.4)}
+.dn{display:flex;gap:18px;align-items:center;height:100%}
+.dn-c{width:170px;height:100%;min-height:150px;flex:none}
+.dn .lg{flex-direction:column;gap:9px;margin:0;flex:1;min-width:0}
+.dn .lg span{justify-content:space-between;gap:12px;text-transform:none;font-size:11px;letter-spacing:0}
+.dn .lg b{color:var(--ink);font-weight:400;white-space:nowrap}
+.ringrow{display:flex;gap:18px;align-items:center}
+.ring{width:136px;height:136px;flex:none}
+.srcl{display:grid;gap:7px;flex:1;min-width:0}
+.srcl div{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.srcl div>span:last-child{font:10px var(--mono);color:var(--dim);white-space:nowrap}
+
+/* ---------- lists, tables ---------- */
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font:9px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--dim);text-align:left;padding:0 10px 10px;font-weight:400;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.045);font-feature-settings:'tnum';white-space:nowrap}
+.tbl tr:hover td{background:rgba(255,255,255,.022)}
+.tbl .n{text-align:right}
+.tbl td.w{white-space:normal;min-width:180px}
+.bar{height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sig),var(--amber));box-shadow:0 0 10px rgba(228,43,12,.7)}
+.st{font:9px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}
+.st.live,.st.published{color:var(--ok);border-color:rgba(95,211,154,.3)}.st.draft,.st.paused{color:var(--amber);border-color:rgba(255,138,61,.3)}
+.hb{display:grid;gap:10px}
+.hb .r{display:grid;grid-template-columns:118px minmax(0,1fr) 70px;gap:12px;align-items:center;font-size:12px}
+.hb .r>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+.hb .r>span:last-child{text-align:right;font:11px var(--mono);color:var(--mute)}
+.feed{display:grid;gap:2px}
+.fi{display:flex;gap:12px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12.5px}
+.fi i{width:7px;height:7px;border-radius:50%;background:var(--sig);box-shadow:0 0 10px var(--sig);margin-top:6px;flex:none}
+.fi span{font:10px var(--mono);color:var(--dim)}
+.stat{display:grid;gap:4px}
+.stat b{font-weight:300;font-size:26px;letter-spacing:-.03em;font-feature-settings:'tnum'}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:18px}
+.note{color:var(--mute);font-size:12px;border-left:2px solid var(--sig);padding:2px 0 2px 12px;margin-top:14px}
+.empty{height:100%;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;padding:20px;
+  border:1px dashed rgba(255,255,255,.11);border-radius:14px;color:var(--mute);background:repeating-linear-gradient(135deg,rgba(255,255,255,.014) 0 8px,transparent 8px 16px)}
+.empty b{font-weight:400;color:var(--ink2);font-size:12.5px;max-width:360px}
+.empty code{font:10px var(--mono);color:var(--amber);opacity:.9}
+.inb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dom{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(0,0,0,.2);min-width:0}
+.dh{font:10.5px var(--mono);color:var(--ink2);margin-bottom:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:3px;font:9.5px var(--mono);color:var(--mute)}
+.cell em{font-style:normal;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase}
+.cell em.ok{color:var(--ok)}.cell em.bad{color:var(--err)}
+.intg{padding:20px}
+.ih{display:flex;gap:13px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font:500 14px var(--sans);color:#fff;flex:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.02));border:1px solid var(--line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.ih h3{font-weight:400;font-size:15px}.ih p{font:10.5px var(--mono);color:var(--mute)}
+.ih .chip{margin-left:auto}
+.ep{font:10.5px var(--mono);color:var(--ink2);display:grid;gap:4px;padding:12px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);margin:10px 0 14px;overflow-x:auto}
+.un{display:grid;gap:7px;font-size:12.5px}
+.un div{display:flex;gap:10px;align-items:flex-start}
+.un i{font:normal 10px var(--mono);width:18px;height:18px;border-radius:6px;display:grid;place-items:center;flex:none;margin-top:1px;border:1px solid var(--line)}
+.un .on i{color:var(--ok);border-color:rgba(95,211,154,.35);background:rgba(95,211,154,.08)}
+.un .wait{color:var(--mute)}.un .miss i{color:var(--err);border-color:rgba(255,90,79,.35)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;counter-reset:s}
+.steps div{border:1px solid var(--line);border-radius:14px;padding:16px;background:rgba(0,0,0,.2)}
+.steps b{display:block;font-weight:400;margin:8px 0 4px}.steps span{color:var(--mute);font-size:12px}
+.steps div::before{counter-increment:s;content:'0' counter(s);font:10px var(--mono);color:var(--sig);letter-spacing:.1em}
+.up{display:grid;gap:8px}
+.up div{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.2);font-size:12.5px}
+.up span{font:11px var(--mono);color:var(--amber)}
+#tip{position:fixed;left:0;top:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .12s;padding:8px 11px;border-radius:10px;
+  background:rgba(16,13,12,.94);border:1px solid var(--line2);font:11px var(--mono);color:var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.6);white-space:nowrap}
+#tip b{color:#fff;font-weight:500}
+.err{padding:60px;color:var(--mute)}
+
+@media (max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.inb{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+  body{overflow:auto}.app{display:block;height:auto}
+  .side{position:sticky;top:0;z-index:10;height:auto;flex-direction:row;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}
+  .brand,.grp,.sidefoot{display:none}.nav{display:flex;gap:2px}.nav a{white-space:nowrap}.nav a.on::before{display:none}.nav a .d{display:none}
+  .main{height:auto;overflow:visible}.top{position:static;padding:16px;flex-wrap:wrap}.tr{margin-left:0;justify-content:flex-start}
+  #view{padding:14px 16px 40px}.g>*{grid-column:span 12!important}
+  .kpis,.kpis.k5,.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.kv{font-size:26px}
+  .map{height:320px}.map.big{height:380px}.steps{grid-template-columns:minmax(0,1fr)}
+  .ringrow,.dn{flex-direction:column;align-items:stretch}.dn-c{width:100%;height:170px}.ring{margin:0 auto}
+  .hb .r{grid-template-columns:92px minmax(0,1fr) 58px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+</head>
+<body>
+<div class="bgfx"></div>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="mark">N</div><div><div class="bn">Newton</div><div class="bs">Control room</div></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidefoot">
+      <div class="mach"><div class="kl">Machine</div><b id="machs">—</b><span id="machd"></span></div>
+      <a class="demolink" id="demolink"></a>
+    </div>
+  </aside>
+  <main class="main" id="main">
+    <header class="top">
+      <div><div class="crumb" id="crumb">Issac Newton · eXp Commercial</div><h1 id="ptitle">Overview</h1></div>
+      <div class="tr"><span class="pill demo" id="demopill" hidden>Demo data · not live</span><span class="pill" id="clock"></span><span class="pill">Last 30 days</span><span class="pill" id="syncp"></span></div>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
+<div id="tip"></div>
+<script>
+const C = {sig: '#e42b0c', amber: '#ff8a3d', gold: '#ffc38a', ink: '#f3efeb', mute: '#8e8882', dim: '#55504c', ok: '#5fd39a'};
+const DEMO = new URLSearchParams(location.search).has('demo');
+const API = ['instantly', 'heyreach', 'ghl'];
+const NAMES = {instantly: 'Instantly', heyreach: 'HeyReach', ghl: 'GoHighLevel', content: 'LinkedIn', website: 'Website', list: 'Owner list'};
+let D = null, CUR = null;
+
+const $ = s => document.querySelector(s);
+const fmt = v => v == null || isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US');
+const pctf = (a, b, dp = 1) => !b || a == null ? '—' : (100 * a / b).toFixed(dp) + '%';
+const sum = (a, k) => (a || []).reduce((t, x) => t + (+(k ? x[k] : x) || 0), 0);
+const money = v => v == null ? '—' : v >= 1e6 ? '$' + (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? '$' + Math.round(v / 1e3) + 'K' : '$' + Math.round(v);
+const dshort = d => new Date(d.length > 10 ? d : d + 'T12:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+const uid = () => 'u' + Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const trunc = (s, n) => s.length > n ? s.slice(0, Math.max(3, n - 1)) + '…' : s;
+const ago = iso => { if (!iso) return 'never'; const m = (Date.now() - new Date(iso)) / 6e4;
+  return m < 1 ? 'just now' : m < 60 ? Math.round(m) + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago' };
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+const glowF = (id, sd = 4) => `<filter id="${id}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${sd}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+const grad = (id, col, a0 = 1, a1 = .15) => `<linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity="${a0}"/><stop offset="1" stop-color="${col}" stop-opacity="${a1}"/></linearGradient>`;
+
+/* ---------- source state ---------- */
+function srcState(k) {
+  const b = D[k] || {};
+  if (API.includes(k)) return b.connected ? (b.error ? {c: 'err', t: 'Stale · ' + ago(b.synced_at)} : {c: 'live', t: 'Live'}) : b.error ? {c: 'err', t: 'Sync error'} : {c: 'off', t: 'Not connected'};
+  return {c: 'man', t: 'Manual' + (b.updated ? ' · ' + dshort(b.updated) : '')};
+}
+const srcChip = k => { const s = srcState(k); return `<span class="chip ${s.c}"><i></i>${NAMES[k]} · ${s.t}</span>` };
+const lastSync = k => API.includes(k) ? (D[k] || {}).synced_at ? ago(D[k].synced_at) : '—' : (D[k] || {}).updated ? dshort(D[k].updated) : '—';
+
+/* ---------- building blocks ---------- */
+const kpi = (label, val, sub, o = {}) => `<div class="glass kpi tilt ${o.accent ? 'accent' : ''}"><div class="kl">${label}</div><div class="kv">${val}</div><div class="ks">${sub || ''}</div>${o.id ? `<div class="spark" id="${o.id}"></div>` : ''}</div>`;
+const panel = o => `<section class="glass panel s${o.span || 12} ${o.cls || ''}"><header class="ph"><div><h3>${o.title}</h3>${o.sub ? `<p>${o.sub}</p>` : ''}</div>${o.src ? srcChip(o.src) : ''}</header>${o.body}</section>`;
+const empty = (msg, ep) => `<div class="empty"><b>${msg}</b>${ep ? `<code>${ep}</code>` : ''}</div>`;
+const legend = items => `<div class="lg">${items.map(([l, c]) => `<span><i style="background:${c};color:${c}"></i>${l}</span>`).join('')}</div>`;
+const hbars = (items, f = fmt) => { const m = Math.max(1, ...items.map(x => x[1] || 0));
+  return `<div class="hb">${items.map(([l, v]) => `<div class="r"><span title="${esc(l)}">${esc(l)}</span><div class="bar"><i style="width:${100 * (v || 0) / m}%"></i></div><span>${f(v)}</span></div>`).join('')}</div>` };
+const bar = (v, of) => `<div class="bar"><i style="width:${of ? Math.min(100, 100 * v / of) : 0}%"></i></div>`;
+
+/* ---------- chart primitives (SVG, drawn at the container's real pixel size) ---------- */
+function svg(el) { el.innerHTML = ''; const w = el.clientWidth || 600, h = el.clientHeight || 220;
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"></svg>`; return [el.firstChild, w, h] }
+function smooth(p) { if (!p.length) return ''; let d = `M${p[0][0]},${p[0][1]}`;
+  for (let i = 1; i < p.length; i++) { const [x0, y0] = p[i - 1], [x1, y1] = p[i], cx = (x0 + x1) / 2; d += ` C${cx},${y0} ${cx},${y1} ${x1},${y1}` } return d }
+const nice = m => { if (m <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(m))), f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p };
+const axf = v => v >= 1000 ? (v / 1000).toFixed(v >= 1e4 ? 0 : 1) + 'k' : v % 1 ? v.toFixed(1) : String(v);
+
+function spark(el, vals, color = C.sig) {
+  if (!el) return; const [s, W, H] = svg(el), n = vals.length, m = Math.max(...vals, 1), flat = vals.every(v => !v);
+  const p = vals.map((v, i) => [i * W / Math.max(1, n - 1), H - 3 - (v / m) * (H - 8)]), id = uid(), d = smooth(p);
+  s.innerHTML = `<defs>${grad(id, color, .35, 0)}</defs>${flat ? '' : `<path d="${d} L${W},${H} L0,${H}Z" fill="url(#${id})"/>`}
+    <path d="${d}" fill="none" stroke="${flat ? C.dim : color}" stroke-width="1.5" ${flat ? 'stroke-dasharray="2 4"' : ''}/>`;
+}
+
+/* time series: bar and line series share the day axis; axis:'r' puts a series on its own right scale */
+function lines(el, dates, series) {
+  const [s, W, H] = svg(el), hasR = series.some(x => x.axis === 'r'), L = 40, R = hasR ? 40 : 10, T = 12, B = 24, pw = W - L - R, ph = H - T - B, n = dates.length;
+  const X = i => L + pw * (i + .5) / n, slot = pw / n, isDate = /^\d{4}-/.test(dates[0] || '');
+  const mx = f => nice(Math.max(1, ...series.filter(f).flatMap(x => x.vals)));
+  const lm = mx(x => x.axis !== 'r'), rm = mx(x => x.axis === 'r'), gid = uid();
+  let g = `<defs>${glowF(gid, 3)}</defs>`;
+  for (let k = 0; k <= 4; k++) { const y = T + ph - ph * k / 4;
+    g += `<line class="grid-l" x1="${L}" x2="${W - R}" y1="${y}" y2="${y}"/><text x="${L - 8}" y="${y + 3}" text-anchor="end">${axf(lm * k / 4)}</text>`;
+    if (hasR) g += `<text x="${W - R + 8}" y="${y + 3}">${axf(rm * k / 4)}</text>` }
+  const bars = series.filter(x => x.type === 'bar'), nb = bars.length, bw = Math.max(1.5, Math.min(isDate ? 10 : 34, slot * .64 / Math.max(1, nb)));
+  bars.forEach((se, b) => { const m = se.axis === 'r' ? rm : lm, id = uid(); g += `<defs>${grad(id, se.color, 1, .12)}</defs>`;
+    se.vals.forEach((v, i) => { if (!v) return; const h = ph * v / m, x = X(i) - nb * bw / 2 + b * bw;
+      g += `<rect class="grow" style="animation-delay:${i * 12}ms" x="${x + .5}" y="${T + ph - h}" width="${bw - 1}" height="${h}" rx="1.5" fill="url(#${id})"/>` }) });
+  series.filter(x => x.type !== 'bar').forEach(se => { const m = se.axis === 'r' ? rm : lm, flat = se.vals.every(v => !v), p = se.vals.map((v, i) => [X(i), T + ph - ph * v / m]), d = smooth(p);
+    if (se.fill && !flat) { const id = uid(); g += `<defs>${grad(id, se.color, .26, 0)}</defs><path d="${d} L${p.at(-1)[0]},${T + ph} L${p[0][0]},${T + ph}Z" fill="url(#${id})"/>` }
+    g += `<path d="${d}" fill="none" stroke="${flat ? C.dim : se.color}" stroke-width="${se.w || 1.8}" ${flat ? 'stroke-dasharray="3 5"' : `filter="url(#${gid})"`}/>`;
+    if (!flat) { const q = p.at(-1); g += `<circle class="pulse" cx="${q[0]}" cy="${q[1]}" r="5" fill="${se.color}"/><circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${se.color}"/>` } });
+  const lab = d => isDate ? dshort(d) : d;
+  g += dates.map((d, i) => !isDate || (i % 7 === 0 && n - 1 - i >= 4) || i === n - 1 ? `<text x="${X(i)}" y="${H - 5}" text-anchor="middle">${esc(lab(d))}</text>` : '').join('');
+  g += dates.map((d, i) => `<rect class="hit" x="${L + slot * i}" y="${T}" width="${slot}" height="${ph}" data-tip="${esc(lab(d))}${series.map(se => ` &nbsp;<span style='color:${se.color}'>●</span> ${se.label} <b>${fmt(se.vals[i])}</b>`).join('')}"/>`).join('');
+  s.innerHTML = g;
+}
+
+/* 3D prism bars: front face, lit top, shaded side, on an isometric floor */
+function bars3d(el, items, {fmtv = fmt, rot} = {}) {
+  const [s, W, H] = svg(el), n = items.length; if (!n) return;
+  rot = rot ?? (W / n < 78);
+  const T = 30, B = rot ? 78 : 30, L = 6, R = 6, dep = Math.max(5, Math.min(14, (W / n) * .15)), dy = dep * .62;
+  const slot = (W - L - R - dep) / n, bw = Math.min(56, slot * .58), ph = H - T - B - dy, mx = Math.max(...items.map(i => i.value || 0), 1), gid = uid();
+  let g = `<defs>${glowF(gid, 7)}</defs><path d="M${L},${H - B} L${W - R - dep},${H - B} L${W - R},${H - B - dy} L${L + dep},${H - B - dy}Z" fill="rgba(255,255,255,.025)" stroke="rgba(255,255,255,.07)"/>`;
+  for (let k = 1; k <= 3; k++) { const y = H - B - dy - ph * k / 3; g += `<line x1="${L + dep}" x2="${W - R}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-dasharray="2 4"/>` }
+  items.forEach((it, i) => {
+    const col = it.color || C.sig, v = it.value || 0, h = v ? Math.max(3, ph * v / mx) : 0, x = L + i * slot + (slot - bw) / 2, yb = H - B, y = yb - h, id = uid();
+    if (!v) g += `<path d="M${x},${yb} L${x + dep},${yb - dy} L${x + bw + dep},${yb - dy} L${x + bw},${yb}Z" fill="none" stroke="rgba(255,255,255,.16)" stroke-dasharray="2 3"/>`;
+    else g += `<defs>${grad(id, col, 1, .3)}</defs><g class="grow" style="animation-delay:${i * 55}ms" data-tip="${esc(it.label)} · <b>${fmtv(v)}</b>">
+      <rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="url(#${id})" filter="url(#${gid})"/>
+      <path d="M${x + bw},${y} L${x + bw + dep},${y - dy} L${x + bw + dep},${yb - dy} L${x + bw},${yb}Z" fill="${col}" opacity=".34"/>
+      <path d="M${x},${y} L${x + dep},${y - dy} L${x + bw + dep},${y - dy} L${x + bw},${y}Z" fill="${mix(col, '#ffffff', .35)}"/></g>`;
+    g += `<text class="bv" x="${x + (bw + dep) / 2}" y="${y - dy - 7}" text-anchor="middle">${fmtv(v)}</text>`;
+    g += rot ? `<text transform="translate(${x + bw / 2},${yb + 12}) rotate(-38)" text-anchor="end">${esc(trunc(it.label, 22))}</text>`
+             : `<text x="${x + bw / 2}" y="${yb + 16}" text-anchor="middle">${esc(trunc(it.label, Math.max(4, Math.floor(slot / 6.2))))}</text>`;
+  });
+  s.innerHTML = g;
+}
+
+/* 3D stacked funnel: cylinder slabs, widths ~ sqrt(value), labels to the right */
+function funnel3d(el, stages) {
+  const [s, W, H] = svg(el), n = stages.length, labW = Math.min(250, W * .46), cw = W - labW - 16, cx = 8 + cw / 2;
+  const ry = Math.max(4, Math.min(11, cw * .03)), rowH = (H - 2 * ry - 8) / n, sh = rowH * .6, mx = Math.max(...stages.map(x => x.value || 0), 1), gid = uid();
+  let g = `<defs>${glowF(gid, 9)}</defs>`, prevW = cw;
+  stages.forEach((st, i) => {
+    let w = cw * (.2 + .8 * Math.sqrt((st.value || 0) / mx)); w = Math.min(w, prevW); prevW = w;
+    const x0 = cx - w / 2, x1 = cx + w / 2, y = 4 + ry + i * rowH, id = uid(), col = mix(C.sig, C.gold, i / Math.max(1, n - 1)), ly = y + sh / 2;
+    g += `<defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22"/><stop offset=".42" stop-color="${col}" stop-opacity=".95"/><stop offset="1" stop-color="${col}" stop-opacity=".28"/></linearGradient></defs>
+      <g class="rise3" style="animation-delay:${i * 80}ms" data-tip="${esc(st.label)} · <b>${fmt(st.value)}</b>"><path d="M${x0},${y} L${x0},${y + sh} A${w / 2},${ry} 0 0 0 ${x1},${y + sh} L${x1},${y} Z" fill="url(#${id})" ${i === 0 ? `filter="url(#${gid})"` : ''}/>
+      <ellipse cx="${cx}" cy="${y}" rx="${w / 2}" ry="${ry}" fill="${mix(col, '#ffffff', .28)}" stroke="rgba(255,255,255,.4)" stroke-width=".6"/></g>
+      <line x1="${x1 + 6}" x2="${W - labW + 4}" y1="${ly}" y2="${ly}" stroke="rgba(255,255,255,.13)" stroke-dasharray="2 3"/>
+      <text class="fl" x="${W - labW + 12}" y="${ly - 5}">${esc(st.label)}</text><text class="fv" x="${W - labW + 12}" y="${ly + 13}">${fmt(st.value)}</text>`;
+    if (i && stages[i - 1].value) g += `<text class="fc" x="${W - 2}" y="${ly + 12}" text-anchor="end">${pctf(st.value, stages[i - 1].value, 0)} of prev</text>`;
+  });
+  s.innerHTML = g;
+}
+
+function ring(el, p, {label = '', val} = {}) {
+  const [s, W, H] = svg(el), r = Math.min(W, H) / 2 - 16, cx = W / 2, cy = H / 2, id = uid(), gid = uid(), v = p == null ? 0 : Math.max(0, Math.min(1, p)), L = 2 * Math.PI * r;
+  let g = `<defs><linearGradient id="${id}" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="${C.sig}"/><stop offset="1" stop-color="${C.gold}"/></linearGradient>${glowF(gid, 4)}</defs>`;
+  for (let k = 0; k < 60; k++) { const a = k / 60 * 2 * Math.PI, on = k / 60 < v, r0 = r + 9, r1 = r + (k % 5 ? 12 : 15);
+    g += `<line x1="${cx + r0 * Math.sin(a)}" y1="${cy - r0 * Math.cos(a)}" x2="${cx + r1 * Math.sin(a)}" y2="${cy - r1 * Math.cos(a)}" stroke="${on ? C.amber : 'rgba(255,255,255,.12)'}" stroke-width="1"/>` }
+  g += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+    ${v ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${id})" stroke-width="8" stroke-linecap="round" stroke-dasharray="${L * v} ${L}" transform="rotate(-90 ${cx} ${cy})" filter="url(#${gid})"/>` : ''}
+    <circle cx="${cx}" cy="${cy}" r="${r - 14}" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.05)"/>
+    <text class="big" x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="${Math.round(r * .5)}">${val ?? (p == null ? '—' : Math.round(v * 100) + '%')}</text>
+    <text x="${cx}" y="${cy + 6 + r * .38}" text-anchor="middle">${esc(label)}</text>`;
+  s.innerHTML = g;
+}
+const miniRing = v => { const r = 17, L = 2 * Math.PI * r, p = v == null ? 0 : v / 100;
+  return `<svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"/>${p ? `<circle cx="23" cy="23" r="${r}" fill="none" stroke="${p >= .9 ? C.ok : C.amber}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${L * p} ${L}" transform="rotate(-90 23 23)"/>` : ''}<text x="23" y="26.5" text-anchor="middle" style="fill:#f3efeb;font-size:10px">${v ?? '—'}</text></svg>` };
+
+/* 3D donut: shaded copies stacked below the ring give it thickness */
+function donut(el, items, {center} = {}) {
+  const tot = sum(items, 'value');
+  el.innerHTML = `<div class="dn"><div class="dn-c"></div><div class="lg">${items.map(x => `<span><span style="display:inline-flex;gap:8px;align-items:center"><i style="background:${x.color};color:${x.color}"></i>${esc(x.label)}</span><b>${fmt(x.value)} <em style="color:var(--dim);font-style:normal">${tot ? pctf(x.value, tot, 0) : ''}</em></b></span>`).join('')}</div></div>`;
+  const [s, W, H] = svg(el.querySelector('.dn-c')), cx = W / 2, cy = H / 2 - 4, r1 = Math.min(W, H * 1.1) / 2 - 8, r0 = r1 * .64, gap = items.filter(x => x.value).length > 1 ? .025 : 0;
+  const arc = (a0, a1, dy = 0) => { a1 = Math.min(a1, a0 + 2 * Math.PI - .0001); const la = a1 - a0 > Math.PI ? 1 : 0, p = (r, a) => [cx + r * Math.sin(a), cy + dy - r * Math.cos(a) * .78];
+    const [x0, y0] = p(r1, a0), [x1, y1] = p(r1, a1), [x2, y2] = p(r0, a1), [x3, y3] = p(r0, a0);
+    return `M${x0},${y0}A${r1},${r1 * .78} 0 ${la} 1 ${x1},${y1}L${x2},${y2}A${r0},${r0 * .78} 0 ${la} 0 ${x3},${y3}Z` };
+  let g = '', a = 0;
+  if (!tot) g = `<path d="${arc(0, 2 * Math.PI)}" fill="none" stroke="rgba(255,255,255,.15)" stroke-dasharray="3 4"/>`;
+  else { const segs = items.filter(x => x.value).map(x => { const a0 = a, a1 = a + 2 * Math.PI * x.value / tot; a = a1; return [x, a0 + gap, a1 - gap] });
+    for (let dy = 9; dy > 0; dy -= 1.5) g += segs.map(([x, a0, a1]) => `<path d="${arc(a0, a1, dy)}" fill="${mix(x.color, '#000000', .55)}"/>`).join('');
+    g += segs.map(([x, a0, a1], i) => `<path class="rise3" style="animation-delay:${i * 90}ms" d="${arc(a0, a1)}" fill="${x.color}" data-tip="${esc(x.label)} · <b>${fmt(x.value)}</b> · ${pctf(x.value, tot, 0)}"/>`).join('') }
+  g += `<text class="big" x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="20">${center ?? fmt(tot)}</text>`;
+  s.innerHTML = g;
+}
+
+/* weekday x week heatmap of a daily series */
+function heat(el, daily, key, color = C.sig) {
+  const [s, W, H] = svg(el); if (!daily.length) return;
+  const first = (new Date(daily[0].date + 'T12:00').getDay() + 6) % 7, cols = Math.ceil((first + daily.length) / 7), L = 34, T = 18, cw = (W - L) / cols, chh = (H - T) / 7, m = Math.max(1, ...daily.map(d => d[key] || 0));
+  let g = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, r) => `<text x="0" y="${T + r * chh + chh / 2 + 3}">${d}</text>`).join('');
+  daily.forEach((d, i) => { const k = first + i, c = Math.floor(k / 7), r = k % 7, v = d[key] || 0, t = v / m;
+    if ((r === 0 || i === 0) && cw > 34) g += `<text x="${L + c * cw + 2}" y="10">${dshort(d.date)}</text>`;
+    g += `<rect x="${L + c * cw + 2}" y="${T + r * chh + 2}" width="${cw - 4}" height="${chh - 4}" rx="4" fill="${v ? color : 'rgba(255,255,255,.035)'}" fill-opacity="${v ? .12 + .88 * t : 1}" ${t > .7 ? `style="filter:drop-shadow(0 0 6px ${color})"` : ''} data-tip="${dshort(d.date)} · <b>${fmt(v)}</b>"/>` });
+  s.innerHTML = g;
+}
+
+function radar(el, items) {
+  const [s, W, H] = svg(el), n = items.length, cx = W / 2, cy = H / 2 + 4, r = Math.min(W * .6, H) / 2 - 26, m = Math.max(1, ...items.map(x => x.value)), id = uid(), gid = uid();
+  const P = (i, f) => { const a = i / n * 2 * Math.PI; return [cx + r * f * Math.sin(a), cy - r * f * Math.cos(a)] };
+  let g = `<defs><radialGradient id="${id}"><stop offset="0" stop-color="${C.sig}" stop-opacity=".15"/><stop offset="1" stop-color="${C.sig}" stop-opacity=".55"/></radialGradient>${glowF(gid, 5)}</defs>`;
+  for (let k = 1; k <= 4; k++) g += `<polygon points="${items.map((_, i) => P(i, k / 4).join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,${k === 4 ? .12 : .06})"/>`;
+  items.forEach((x, i) => { const [a, b] = P(i, 1), [lx, ly] = P(i, 1.14); g += `<line x1="${cx}" y1="${cy}" x2="${a}" y2="${b}" stroke="rgba(255,255,255,.06)"/><text x="${lx}" y="${ly + 3}" text-anchor="${Math.abs(lx - cx) < 8 ? 'middle' : lx > cx ? 'start' : 'end'}">${esc(trunc(x.label, 14))}</text>` });
+  const pts = items.map((x, i) => P(i, Math.sqrt(x.value / m)));
+  g += `<polygon class="rise3" points="${pts.map(p => p.join(',')).join(' ')}" fill="url(#${id})" stroke="${C.amber}" stroke-width="1.5" filter="url(#${gid})"/>`;
+  g += pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${C.gold}" data-tip="${esc(items[i].label)} · <b>${fmt(items[i].value)}</b>"/>`).join('');
+  s.innerHTML = g;
+}
+
+/* ---------- Texas: extruded county plate, tilted, with light pillars ---------- */
+let TXP = null;
+const loadTX = () => TXP || (TXP = fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json').then(r => r.json()).then(us => ({
+  cs: topojson.feature(us, us.objects.counties).features.filter(f => String(f.id).startsWith('48')),
+  st: topojson.feature(us, us.objects.states).features.find(f => String(f.id) === '48')})));
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+function tiltProj(feature, W, H, {padT = 20, pad = 16} = {}) {
+  const pre = d3.geoConicConformal().parallels([27.5, 35]).rotate([100, 0]).fitSize([1000, 1000], feature);
+  const ang = -.13, k = .56, ca = Math.cos(ang), sa = Math.sin(ang), P = {s: 1, x: 0, y: 0};
+  const t = (x, y) => { x -= 500; y -= 500; return [(x * ca - y * sa) * P.s + P.x, (x * sa + y * ca) * k * P.s + P.y] };
+  const tf = d3.geoTransform({point(x, y) { const q = t(x, y); this.stream.point(q[0], q[1]) }});
+  const path = d3.geoPath({stream: s => pre.stream(tf.stream(s))});
+  const [[x0, y0], [x1, y1]] = path.bounds(feature);
+  P.s = Math.min((W - 2 * pad) / (x1 - x0), (H - padT - pad - 14) / (y1 - y0));
+  P.x = (W - (x1 - x0) * P.s) / 2 - x0 * P.s; P.y = padT + (H - padT - pad - 14 - (y1 - y0) * P.s) / 2 - y0 * P.s;
+  return {path, pt: ll => { const q = pre(ll); return t(q[0], q[1]) }};
+}
+async function txMap(el, counts, {pillars = 12, labels = 4} = {}) {
+  if (!el) return;
+  if (typeof d3 === 'undefined' || typeof topojson === 'undefined') { el.innerHTML = empty('Map layer offline', 'cdn.jsdelivr.net'); return }
+  let tx; try { tx = await loadTX() } catch (e) { el.innerHTML = empty('Map layer offline', 'us-atlas'); return }
+  if (!el.isConnected) return;
+  const [s, W, H] = svg(el), cm = {}; for (const [k, v] of Object.entries(counts || {})) cm[norm(k)] = v;
+  const val = f => cm[norm(f.properties.name)] || 0, max = Math.max(1, ...tx.cs.map(val)), maxP = H * .3;
+  const {path, pt} = tiltProj(tx.st, W, H, {padT: maxP * .55});
+  const ids = {glow: uid(), soft: uid(), dots: uid(), clip: uid(), pil: uid(), sw: uid()}, sd = path(tx.st), th = 9;
+  let g = `<defs>${glowF(ids.glow, 3)}<filter id="${ids.soft}"><feGaussianBlur stdDeviation="22"/></filter>
+    <pattern id="${ids.dots}" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".8" fill="rgba(255,255,255,.12)"/></pattern>
+    <clipPath id="${ids.clip}"><path d="${sd}"/></clipPath>
+    <linearGradient id="${ids.pil}" x1="0" x2="0" y1="1" y2="0"><stop offset="0" stop-color="${C.gold}"/><stop offset=".35" stop-color="${C.amber}" stop-opacity=".9"/><stop offset="1" stop-color="${C.sig}" stop-opacity="0"/></linearGradient>
+    <linearGradient id="${ids.sw}" x1="0" x2="1"><stop offset="0" stop-color="${C.amber}" stop-opacity="0"/><stop offset=".5" stop-color="${C.amber}" stop-opacity=".16"/><stop offset="1" stop-color="${C.amber}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${sd}" transform="translate(0,${th + 16})" fill="${C.sig}" opacity=".22" filter="url(#${ids.soft})"/>`;
+  for (let i = th; i > 0; i--) g += `<path d="${sd}" transform="translate(0,${i})" fill="${mix('#3a1206', '#120806', i / th)}"/>`;
+  g += `<path d="${sd}" fill="#0d0908"/>`;
+  g += tx.cs.map(f => { const v = val(f), t = v ? Math.log1p(v) / Math.log1p(max) : 0;
+    return `<path d="${path(f)}" fill="${v ? `rgba(228,43,12,${(.05 + .8 * t * t).toFixed(3)})` : 'rgba(255,255,255,.015)'}" stroke="rgba(255,190,160,.09)" stroke-width=".5" data-tip="${esc(f.properties.name)} County · <b>${fmt(v)}</b> businesses"/>` }).join('');
+  g += `<path d="${sd}" fill="url(#${ids.dots})" pointer-events="none"/>
+    <g clip-path="url(#${ids.clip})" pointer-events="none"><rect class="sweep" x="0" y="0" width="${W * .35}" height="${H}" fill="url(#${ids.sw})"/></g>
+    <path d="${sd}" fill="none" stroke="rgba(255,150,110,.6)" stroke-width="1.1" filter="url(#${ids.glow})" pointer-events="none"/>`;
+  const top = tx.cs.map(f => [f, val(f)]).filter(x => x[1]).sort((a, b) => b[1] - a[1]).slice(0, pillars);
+  const nl = W < 500 ? Math.min(2, labels) : labels, boxes = []; let placed = 0;
+  const geo = top.map(([f, v]) => { const [x, y] = pt(d3.geoCentroid(f)); return {f, v, x, y, h: maxP * Math.sqrt(v / max)} });
+  geo.slice().reverse().forEach(({f, v, x, y, h}, j) => { const i = geo.length - 1 - j, w = 3.2;
+    g += `<g data-tip="${esc(f.properties.name)} County · <b>${fmt(v)}</b> businesses">
+      <ellipse class="pulse" style="animation-delay:${i * 180}ms" cx="${x}" cy="${y}" rx="7" ry="3.2" fill="none" stroke="${C.amber}"/>
+      <ellipse cx="${x}" cy="${y}" rx="4.5" ry="2" fill="${C.gold}" opacity=".85"/>
+      <rect class="grow" style="animation-delay:${300 + i * 70}ms" x="${x - w / 2}" y="${y - h}" width="${w}" height="${h}" fill="url(#${ids.pil})" filter="url(#${ids.glow})"/>
+      <circle cx="${x}" cy="${y - h}" r="2.4" fill="#fff" filter="url(#${ids.glow})"/></g>` });
+  geo.forEach(({f, v, x, y, h}) => { if (placed >= nl) return;
+    const tw = Math.max(f.properties.name.length, fmt(v).length) * 6.4 + 18, ly = y - h - 6;
+    const hits = lx => boxes.some(b => lx < b[0] + b[2] + 4 && lx + tw + 4 > b[0] && ly - 26 < b[1] + 36 && ly + 10 > b[1]);
+    const lx = [x + 8, x - tw - 8].find(c => c >= 0 && c + tw <= W && !hits(c)); if (lx == null) return;
+    boxes.push([lx, ly - 26, tw]); placed++;
+    g += `<g pointer-events="none"><rect x="${lx}" y="${ly - 26}" width="${tw}" height="32" rx="7" fill="rgba(12,10,10,.82)" stroke="rgba(255,255,255,.14)"/>
+      <text x="${lx + 9}" y="${ly - 13}" style="fill:#cfc9c4;font-size:9px;letter-spacing:.08em">${esc(f.properties.name.toUpperCase())}</text>
+      <text x="${lx + 9}" y="${ly + 1}" style="fill:#fff;font-size:11px">${fmt(v)}</text></g>` });
+  s.innerHTML = g;
+  const sv = el.firstChild; el.onpointermove = e => { const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5;
+    sv.style.transform = `rotateX(${6 - py * 6}deg) rotateY(${px * 6}deg)` }; el.onpointerleave = () => sv.style.transform = 'rotateX(6deg)';
+  sv.style.transform = 'rotateX(6deg)';
+}
+const mapLegend = () => `<div class="maplg"><span>Fewer</span><i></i><span>More owner businesses</span><span style="margin-left:auto">Pillar height = business count</span></div>`;
+
+/* ---------- derived numbers ---------- */
+function M() {
+  const i = D.instantly || {}, h = D.heyreach || {}, g = D.ghl || {}, c = i.campaigns || [], seller = g.seller || [], deal = g.deal || [];
+  const reached = (arr, w) => { const k = arr.findIndex(s => s.stage.toLowerCase().includes(w)); return k < 0 ? 0 : sum(arr.slice(k), 'count') };
+  return {sent: sum(c, 'sent'), contacted: sum(c, 'contacted'), inCamp: sum(c, 'in_campaign'), replies: sum(c, 'replies'), positive: sum(c, 'positive'),
+    bounced: sum(c, 'bounced'), unsub: sum(c, 'unsubscribed'), liReq: h.requests_sent || 0, liAcc: h.accepted || 0, liMsg: h.messages_sent || 0,
+    liRep: h.replies || 0, liViews: h.profile_views, inPlay: sum(Object.values((D.list || {}).in_play || {})),
+    sOpen: sum(seller, 'count'), sVal: sum(seller, 'value'), dOpen: sum(deal, 'count'), dVal: sum(deal, 'value'),
+    conv: reached(seller, 'conversation'), booked: reached(seller, 'discovery call booked'), held: reached(seller, 'discovery call held'),
+    signed: reached(seller, 'signed'), closed: reached(seller, 'closed')};
+}
+const days = () => (D.instantly.daily || []).map(d => d.date);
+const hrBy = k => { const m = Object.fromEntries((D.heyreach.daily || []).map(d => [d.date, d[k] || 0])); return days().map(d => m[d] || 0) };
+
+/* ---------- pages ---------- */
+function feed(n) { const a = (D.ghl || {}).activity || [];
+  if (!a.length) return empty('Pipeline moves stream here once GoHighLevel connects', 'GET /opportunities/search');
+  return `<div class="feed">${a.slice(0, n).map(x => `<div class="fi"><i></i><div><div>${esc(x.text)}</div><span>${ago(x.at)}</span></div></div>`).join('')}</div>` }
+
+function pOverview() {
+  const m = M(), i = D.instantly, reg = (D.list || {}).registry || {}, live = API.filter(k => D[k] && D[k].connected).length;
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Emails sent', fmt(m.sent), `${fmt(m.contacted)} owners contacted`, {id: 'k1'})}${kpi('Email reply rate', pctf(m.replies, m.contacted), `${fmt(m.replies)} replies · ${fmt(m.positive)} positive`, {id: 'k2'})}${kpi('LinkedIn accepted', fmt(m.liAcc), `${pctf(m.liAcc, m.liReq)} of ${fmt(m.liReq)} requests`, {id: 'k3'})}${kpi('In conversation', fmt(m.conv), `${money(m.sVal)} seller pipeline`)}${kpi('Discovery calls', fmt(m.booked), 'booked · CRM stage')}${kpi('Listings signed', fmt(m.signed), `${fmt(m.closed)} closed`, {accent: 1})}</div>
+    ${panel({span: 8, cls: 'fill', title: 'Territory · Texas', sub: `${fmt(reg.total)} owner businesses cleared the gates · pillars mark the 12 densest counties`, src: 'list', body: `<div class="map" id="ov-map"></div>${mapLegend()}`})}
+    <div class="s4 col">${panel({title: 'Sync health', sub: 'Sources feeding this room', body: `<div class="ringrow"><div class="ring" id="ov-ring"></div><div class="srcl">${['instantly', 'heyreach', 'ghl', 'content', 'website', 'list'].map(k => `<div>${srcChip(k)}<span>${lastSync(k)}</span></div>`).join('')}</div></div>`})}
+      ${panel({title: 'Live activity', sub: 'Latest pipeline moves', src: 'ghl', body: feed(6)})}</div>
+    ${panel({span: 7, title: 'Seller journey', sub: 'Owners in play → listing signed, both channels', body: '<div class="ch" id="ov-fun" style="height:340px"></div>'})}
+    ${panel({span: 5, title: 'Where replies come from', sub: 'Email vs LinkedIn', body: `<div class="ch" id="ov-dn" style="height:190px"></div><div class="stats" style="margin-top:18px"><div class="stat"><span class="kl">Seller pipeline</span><b>${money(m.sVal)}</b></div><div class="stat"><span class="kl">Buyer pipeline</span><b>${money(m.dVal)}</b></div><div class="stat"><span class="kl">Owners in play</span><b>${fmt(m.inPlay)}</b></div></div>`})}
+    ${panel({span: 12, title: 'Outreach volume', sub: 'Daily emails sent, LinkedIn requests and total replies', body: legend([['Emails sent', C.sig], ['LinkedIn requests', C.amber], ['Replies (right axis)', C.gold]]) + '<div class="ch" id="ov-daily" style="height:250px"></div>'})}
+  </div>`;
+  const draw = () => {
+    spark($('#k1'), i.daily.map(d => d.sent)); spark($('#k2'), i.daily.map(d => d.replies), C.amber); spark($('#k3'), hrBy('requests'), C.gold);
+    txMap($('#ov-map'), reg.by_county, {pillars: 12, labels: 4});
+    ring($('#ov-ring'), live / 3, {val: `${live}/3`, label: 'APIs live'});
+    funnel3d($('#ov-fun'), [{label: 'Owners in play', value: m.inPlay}, {label: 'Contacted by email', value: m.contacted}, {label: 'Replied · email + LinkedIn', value: m.replies + m.liRep},
+      {label: 'In conversation · CRM', value: m.conv}, {label: 'Discovery call booked', value: m.booked}, {label: 'Listing signed', value: m.signed}]);
+    donut($('#ov-dn'), [{label: 'Email replies', value: m.replies, color: C.sig}, {label: 'LinkedIn replies', value: m.liRep, color: C.amber}]);
+    const hr = hrBy('replies');
+    lines($('#ov-daily'), days(), [{label: 'Emails', vals: i.daily.map(d => d.sent), type: 'bar', color: C.sig}, {label: 'LinkedIn', vals: hrBy('requests'), type: 'bar', color: C.amber},
+      {label: 'Replies', vals: i.daily.map((d, k) => (d.replies || 0) + hr[k]), axis: 'r', color: C.gold, fill: 1}]);
+  };
+  return {html, draw};
+}
+
+function pEmail() {
+  const m = M(), i = D.instantly, c = i.campaigns || [], steps = i.steps || [], dl = m.sent - m.bounced;
+  const byDom = {}; (i.inboxes || []).forEach(x => (byDom[x.domain] = byDom[x.domain] || []).push(x));
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Emails sent', fmt(m.sent), `${c.length} campaigns`, {id: 'e1'})}${kpi('Owners contacted', fmt(m.contacted), `of ${fmt(m.inCamp)} loaded`)}${kpi('Reply rate', pctf(m.replies, m.contacted), `${fmt(m.replies)} replies`, {id: 'e2', accent: 1})}${kpi('Positive rate', pctf(m.positive, m.replies), `${fmt(m.positive)} opportunities`)}${kpi('Bounce rate', pctf(m.bounced, m.sent, 2), `${fmt(m.bounced)} bounced`)}${kpi('Unsubscribes', fmt(m.unsub), pctf(m.unsub, m.sent, 2) + ' of sent')}</div>
+    ${panel({span: 8, title: 'Daily send and reply volume', sub: 'Last 30 days, all Issac campaigns', src: 'instantly', body: legend([['Sent', C.sig], ['Replies (right axis)', C.gold]]) + '<div class="ch" id="em-daily" style="height:260px"></div>'})}
+    ${panel({span: 4, title: 'Deliverability', sub: 'Every email sent, by outcome', body: '<div class="ch" id="em-dn" style="height:170px"></div><div class="ch" id="em-ring" style="height:130px;margin-top:10px"></div>'})}
+    ${panel({span: 12, title: 'Campaigns', sub: 'One campaign per owner segment', src: 'instantly', body: `<div class="tw"><table class="tbl"><thead><tr><th>Campaign</th><th>Status</th><th class="n">Loaded</th><th>Contacted</th><th class="n">Sent</th><th class="n">Replies</th><th class="n">Reply %</th><th class="n">Positive</th><th class="n">Bounce %</th></tr></thead><tbody>${c.map(x => `<tr><td>${esc(x.name)}</td><td><span class="st ${x.status}">${x.status}</span></td><td class="n">${fmt(x.in_campaign)}</td><td><div style="display:flex;gap:10px;align-items:center">${bar(x.contacted, x.in_campaign)}<span style="font:10.5px var(--mono);color:var(--mute)">${fmt(x.contacted)}</span></div></td><td class="n">${fmt(x.sent)}</td><td class="n">${fmt(x.replies)}</td><td class="n">${pctf(x.replies, x.contacted)}</td><td class="n">${fmt(x.positive)}</td><td class="n">${pctf(x.bounced, x.sent, 2)}</td></tr>`).join('')}</tbody></table></div>`})}
+    ${panel({span: 6, title: 'Replies by campaign', sub: 'Which segment answers', body: '<div class="ch" id="em-camp" style="height:260px"></div>'})}
+    ${panel({span: 6, title: 'Sequence steps', sub: 'Sent and replies per email in the sequence', src: 'instantly', body: steps.length ? legend([['Sent', C.sig], ['Replies (right axis)', C.gold]]) + '<div class="ch" id="em-steps" style="height:236px"></div>' : empty('Step-level results appear once the campaigns send', 'GET /campaigns/analytics/steps')})}
+    ${panel({span: 5, title: 'Send calendar', sub: 'Emails sent per day, by weekday', body: '<div class="ch" id="em-heat" style="height:230px"></div>'})}
+    ${panel({span: 7, title: 'Inbox health', sub: `${(i.inboxes || []).length} sending inboxes · warm-up score out of 100`, src: 'instantly', body: `<div class="inb">${Object.entries(byDom).map(([dm, a]) => `<div class="dom"><div class="dh">${esc(dm)}</div><div class="cells">${a.map((x, k) => `<div class="cell">${miniRing(x.warmup)}<span>Inbox ${k + 1}</span><em class="${x.ok ? 'ok' : 'bad'}">${x.ok ? 'healthy' : 'check'}</em></div>`).join('')}</div></div>`).join('')}</div>`})}
+  </div>`;
+  const draw = () => {
+    spark($('#e1'), i.daily.map(d => d.sent)); spark($('#e2'), i.daily.map(d => d.replies), '#ffffff');
+    lines($('#em-daily'), days(), [{label: 'Sent', vals: i.daily.map(d => d.sent), type: 'bar', color: C.sig}, {label: 'Replies', vals: i.daily.map(d => d.replies), axis: 'r', color: C.gold, fill: 1}]);
+    donut($('#em-dn'), [{label: 'Delivered', value: Math.max(0, dl - m.unsub), color: C.sig}, {label: 'Unsubscribed', value: m.unsub, color: C.gold}, {label: 'Bounced', value: m.bounced, color: '#6b6560'}], {center: pctf(dl, m.sent, 0)});
+    ring($('#em-ring'), m.contacted ? m.replies / m.contacted / .1 : null, {val: pctf(m.replies, m.contacted), label: 'reply rate · full ring = 10%'});
+    bars3d($('#em-camp'), c.map((x, k) => ({label: x.name, value: x.replies, color: [C.sig, C.amber, C.gold][k % 3]})));
+    if (steps.length) lines($('#em-steps'), steps.map(x => 'Step ' + x.step), [{label: 'Sent', vals: steps.map(x => x.sent), type: 'bar', color: C.sig}, {label: 'Replies', vals: steps.map(x => x.replies), type: 'bar', color: C.gold, axis: 'r'}]);
+    heat($('#em-heat'), i.daily, 'sent');
+  };
+  return {html, draw};
+}
+
+function pLinkedin() {
+  const m = M(), h = D.heyreach, cs = h.campaigns || [], acc = h.accounts;
+  const html = `<div class="g">
+    <div class="s12 kpis k5">${kpi('Connection requests', fmt(m.liReq), '30 days', {id: 'l1'})}${kpi('Accepted', fmt(m.liAcc), pctf(m.liAcc, m.liReq) + ' acceptance', {accent: 1})}${kpi('Messages sent', fmt(m.liMsg), 'after acceptance')}${kpi('Replies', fmt(m.liRep), pctf(m.liRep, m.liMsg) + ' of messaged', {id: 'l2'})}${kpi('Profile views', fmt(m.liViews), 'from outreach')}</div>
+    ${panel({span: 5, title: 'LinkedIn funnel', sub: 'Request → accepted → messaged → replied', src: 'heyreach', body: '<div class="ch" id="li-fun" style="height:300px"></div>'})}
+    ${panel({span: 7, title: 'Daily activity', sub: 'Requests sent and replies received', src: 'heyreach', body: legend([['Requests', C.amber], ['Replies (right axis)', C.gold]]) + '<div class="ch" id="li-daily" style="height:276px"></div>'})}
+    ${panel({span: 8, title: 'Campaign progress', sub: 'Owners moving through each LinkedIn sequence', src: 'heyreach', body: cs.length ? `<div class="tw"><table class="tbl"><thead><tr><th>Campaign</th><th>Status</th><th class="n">Owners</th><th>Finished</th><th class="n">In progress</th><th class="n">Pending</th><th class="n">Failed</th></tr></thead><tbody>${cs.map(x => `<tr><td>${esc(x.name)}</td><td><span class="st ${x.status}">${x.status}</span></td><td class="n">${fmt(x.total)}</td><td><div style="display:flex;gap:10px;align-items:center">${bar(x.finished, x.total)}<span style="font:10.5px var(--mono);color:var(--mute)">${pctf(x.finished, x.total, 0)}</span></div></td><td class="n">${fmt(x.in_progress)}</td><td class="n">${fmt(x.pending)}</td><td class="n">${fmt(x.failed)}</td></tr>`).join('')}</tbody></table></div>` : empty('Campaign progress appears once Issac\'s LinkedIn is connected in HeyReach', 'POST /campaign/GetAll')})}
+    ${panel({span: 4, title: 'Acceptance rate', sub: acc ? `${fmt(acc.active)} of ${fmt(acc.total)} sender account${acc.total === 1 ? '' : 's'} active` : 'Sender account not connected yet', body: '<div class="ch" id="li-ring" style="height:210px"></div>'})}
+  </div>`;
+  const draw = () => {
+    spark($('#l1'), hrBy('requests'), C.amber); spark($('#l2'), hrBy('replies'), C.gold);
+    funnel3d($('#li-fun'), [{label: 'Requests sent', value: m.liReq}, {label: 'Accepted', value: m.liAcc}, {label: 'Messaged', value: m.liMsg}, {label: 'Replied', value: m.liRep}]);
+    lines($('#li-daily'), days(), [{label: 'Requests', vals: hrBy('requests'), type: 'bar', color: C.amber}, {label: 'Replies', vals: hrBy('replies'), axis: 'r', color: C.gold, fill: 1}]);
+    ring($('#li-ring'), m.liReq ? m.liAcc / m.liReq : null, {label: 'accepted'});
+  };
+  return {html, draw};
+}
+
+function pContent() {
+  const c = D.content || {}, posts = c.posts || [], dl = c.daily || [];
+  const eng = p => (p.reactions || 0) + (p.comments || 0) + (p.reposts || 0);
+  const html = `<div class="g">
+    <div class="s12 kpis k5">${kpi('Followers', fmt(c.followers), c.followers_delta_30d != null ? `+${fmt(c.followers_delta_30d)} in 30 days` : 'not reported yet', {id: 'c1', accent: 1})}${kpi('Posts', fmt(c.posts_30d), 'last 30 days')}${kpi('Impressions', fmt(c.impressions_30d), 'last 30 days', {id: 'c2'})}${kpi('Per post', c.posts_30d ? fmt(c.impressions_30d / c.posts_30d) : '—', 'average impressions')}${kpi('Engagement', posts.length && posts.some(p => p.reactions != null) ? pctf(sum(posts.map(eng)), sum(posts, 'impressions'), 2) : '—', 'reactions + comments ÷ impressions')}</div>
+    ${panel({span: 8, title: 'Audience growth', sub: 'Followers and daily impressions', src: 'content', body: dl.length ? legend([['Followers', C.sig], ['Impressions (right axis)', C.gold]]) + '<div class="ch" id="ct-daily" style="height:260px"></div>' : empty('Daily curve appears after the first weekly LinkedIn export', 'manual.json → content.daily')})}
+    ${panel({span: 4, title: 'Top posts', sub: 'Impressions per post', body: posts.length ? '<div class="ch" id="ct-bars" style="height:286px"></div>' : empty('No posts logged yet')})}
+    ${panel({span: 12, title: 'Post log', sub: 'Every post, newest first', body: posts.length ? `<div class="tw"><table class="tbl"><thead><tr><th>Date</th><th>Post</th><th class="n">Impressions</th><th class="n">Reactions</th><th class="n">Comments</th><th class="n">Eng. rate</th></tr></thead><tbody>${posts.map(p => `<tr><td>${dshort(p.date)}</td><td class="w">${esc(p.title)}</td><td class="n">${fmt(p.impressions)}</td><td class="n">${fmt(p.reactions)}</td><td class="n">${fmt(p.comments)}</td><td class="n">${p.reactions != null ? pctf(eng(p), p.impressions, 2) : '—'}</td></tr>`).join('')}</tbody></table></div>` : empty('Posts appear here as they go live') + (c.note ? `<div class="note">${esc(c.note)}</div>` : '')})}
+  </div>`;
+  const draw = () => {
+    spark($('#c1'), dl.map(d => d.followers || 0)); spark($('#c2'), dl.map(d => d.impressions || 0), C.gold);
+    if (dl.length) lines($('#ct-daily'), dl.map(d => d.date), [{label: 'Followers', vals: dl.map(d => d.followers || 0), color: C.sig, fill: 1}, {label: 'Impressions', vals: dl.map(d => d.impressions || 0), type: 'bar', axis: 'r', color: C.gold}]);
+    if (posts.length) bars3d($('#ct-bars'), posts.slice(0, 5).map((p, k) => ({label: dshort(p.date), value: p.impressions, color: mix(C.sig, C.gold, k / 4)})));
+  };
+  return {html, draw};
+}
+
+function pPipeline() {
+  const m = M(), g = D.ghl, seller = g.seller || [], deal = g.deal || [];
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Sellers in pipeline', fmt(m.sOpen), 'all stages')}${kpi('Seller pipeline', money(m.sVal), 'value across stages', {accent: 1})}${kpi('In conversation', fmt(m.conv), 'reached this stage or later')}${kpi('Listings signed', fmt(m.signed), `${fmt(m.closed)} closed`)}${kpi('Buyers in pipeline', fmt(m.dOpen), 'all stages')}${kpi('Buyer pipeline', money(m.dVal), 'value across stages')}</div>
+    ${panel({span: 12, title: 'Seller pipeline', sub: 'Owners at each stage right now', src: 'ghl', body: '<div class="ch" id="pl-seller" style="height:330px"></div>'})}
+    ${panel({span: 7, title: 'Stage by stage', sub: '“Reached” counts everyone at this stage or beyond', body: `<div class="tw"><table class="tbl"><thead><tr><th>Stage</th><th class="n">Now</th><th class="n">Value</th><th class="n">Reached</th><th class="n">From prev.</th></tr></thead><tbody>${seller.map((s, k) => { const r = sum(seller.slice(k), 'count'), rp = k ? sum(seller.slice(k - 1), 'count') : 0;
+      return `<tr><td>${esc(s.stage)}</td><td class="n">${fmt(s.count)}</td><td class="n">${s.value ? money(s.value) : '—'}</td><td class="n">${fmt(r)}</td><td class="n">${k ? pctf(r, rp, 0) : ''}</td></tr>` }).join('')}</tbody></table></div>`})}
+    <div class="s5 col">${panel({title: 'Buyer pipeline', sub: 'Buyers and investors by stage', src: 'ghl', body: '<div class="ch" id="pl-deal" style="height:250px"></div>'})}
+      ${panel({title: 'Pipeline activity', sub: 'Latest stage moves', body: feed(8)})}</div>
+  </div>`;
+  const draw = () => {
+    bars3d($('#pl-seller'), seller.map((s, k) => ({label: s.stage, value: s.count, color: mix(C.sig, C.gold, k / Math.max(1, seller.length - 1))})));
+    bars3d($('#pl-deal'), deal.map((s, k) => ({label: s.stage, value: s.count, color: mix(C.amber, C.gold, k / Math.max(1, deal.length - 1))})));
+  };
+  return {html, draw};
+}
+
+function pFollow() {
+  const g = D.ghl, t = g.tasks, w = g.workflows || [], cv = g.conversations;
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Open tasks', fmt(t && t.open), 'follow-ups to do')}${kpi('Due today', fmt(t && t.due_today), 'across the pipeline', {accent: 1})}${kpi('Overdue', fmt(t && t.overdue), 'past due date')}${kpi('Completed', fmt(t && t.completed_30d), 'last 30 days')}${kpi('Unread', fmt(cv && cv.unread), 'conversations waiting')}${kpi('Automations live', w.length ? fmt(w.filter(x => x.status === 'published').length) : '—', w.length ? `of ${w.length} workflows` : 'workflows')}</div>
+    ${panel({span: 4, title: 'Follow-up discipline', sub: 'Share of tasks closed', src: 'ghl', body: t ? '<div class="ch" id="fu-ring" style="height:240px"></div>' : empty('Task counts appear once GoHighLevel connects', 'POST /locations/{id}/tasks/search')})}
+    ${panel({span: 4, title: 'Conversations by channel', sub: 'Every thread in the CRM inbox', src: 'ghl', body: cv ? '<div class="ch" id="fu-dn" style="height:240px"></div>' : empty('Email, SMS and call threads appear once GoHighLevel connects', 'GET /conversations/search')})}
+    ${panel({span: 4, title: 'Who owes the next message', sub: 'Open threads by who spoke last', body: cv ? '<div class="ch" id="fu-io" style="height:240px"></div>' : empty('Threads waiting on Issac vs waiting on the owner', 'GET /conversations/search')})}
+    ${panel({span: 12, title: 'Automations', sub: 'Workflows running the follow-up', src: 'ghl', body: w.length ? `<div class="tw"><table class="tbl"><thead><tr><th>Workflow</th><th>Status</th><th>Does</th></tr></thead><tbody>${w.map(x => `<tr><td>${esc(x.name)}</td><td><span class="st ${esc(x.status)}">${esc(x.status)}</span></td><td class="w" style="color:var(--mute)">${esc(x.does || '')}</td></tr>`).join('')}</tbody></table></div>` : empty('The workflow list and their status appear once GoHighLevel connects', 'GET /workflows/')})}
+  </div>`;
+  const draw = () => {
+    if (t) ring($('#fu-ring'), (t.completed_30d + t.open) ? t.completed_30d / (t.completed_30d + t.open) : null, {label: 'tasks completed'});
+    if (cv) { donut($('#fu-dn'), Object.entries(cv.by_channel || {}).map(([k, v], i) => ({label: k, value: v, color: [C.sig, C.amber, C.gold, '#6b6560'][i % 4]})));
+      bars3d($('#fu-io'), [{label: 'Waiting on Issac', value: cv.awaiting_us, color: C.sig}, {label: 'Waiting on owner', value: cv.awaiting_them, color: C.amber}]) }
+  };
+  return {html, draw};
+}
+
+function pCalls() {
+  const a = D.ghl.appointments, m = M(), up = (a && a.upcoming) || [];
+  const tx = iso => new Date(iso).toLocaleString('en-US', {timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Booked', fmt(a && a.booked_30d), 'last 30 days', {id: 'ca1', accent: 1})}${kpi('Showed', fmt(a && a.showed), 'calls held')}${kpi('No-show', fmt(a && a.no_show), 'to re-book')}${kpi('Cancelled', fmt(a && a.cancelled), 'last 30 days')}${kpi('Show rate', a ? pctf(a.showed, a.showed + a.no_show, 0) : '—', 'showed ÷ (showed + no-show)')}${kpi('Next 7 days', a ? fmt(up.length) : '—', 'upcoming calls')}</div>
+    ${panel({span: 8, title: 'Calls booked per day', sub: 'Discovery calls on Issac\'s calendar', src: 'ghl', body: a && a.daily ? '<div class="ch" id="ca-daily" style="height:260px"></div>' : empty('Daily bookings appear once the GoHighLevel calendar connects', 'GET /calendars/events')})}
+    ${panel({span: 4, title: 'Show rate', sub: 'Of calls that were due', body: a ? '<div class="ch" id="ca-ring" style="height:260px"></div>' : empty('Show rate needs appointment outcomes')})}
+    ${panel({span: 6, title: 'Upcoming', sub: 'Texas time (CT) · names stay in the CRM', body: up.length ? `<div class="up">${up.map((u, k) => `<div><b style="font-weight:400">Discovery call ${k + 1}</b><span>${tx(u)}</span></div>`).join('')}</div>` : empty(a ? 'Nothing booked in the next 7 days' : 'Upcoming calls list appears once the calendar connects')})}
+    ${panel({span: 6, title: 'Outcomes', sub: 'What happened to every booked call', body: a ? '<div class="ch" id="ca-dn" style="height:200px"></div>' : `${empty('Outcomes appear once the calendar connects')}<div class="note">CRM stage so far: ${fmt(m.booked)} reached “Discovery Call Booked”, ${fmt(m.held)} reached “Held”.</div>`})}
+  </div>`;
+  const draw = () => { if (!a) return;
+    spark($('#ca1'), (a.daily || []).map(d => d.booked));
+    if (a.daily) lines($('#ca-daily'), a.daily.map(d => d.date), [{label: 'Booked', vals: a.daily.map(d => d.booked), type: 'bar', color: C.sig}]);
+    ring($('#ca-ring'), (a.showed + a.no_show) ? a.showed / (a.showed + a.no_show) : null, {label: 'showed'});
+    donut($('#ca-dn'), [{label: 'Showed', value: a.showed, color: C.sig}, {label: 'No-show', value: a.no_show, color: C.amber}, {label: 'Cancelled', value: a.cancelled, color: '#6b6560'}, {label: 'Upcoming', value: up.length, color: C.gold}]);
+  };
+  return {html, draw};
+}
+
+function pTerritory() {
+  const L = D.list || {}, r = L.registry || {}, ip = L.in_play || {}, u = L.universe || {}, top = Object.entries(r.by_county || {}).sort((a, b) => b[1] - a[1]);
+  const ipt = sum(Object.values(ip));
+  const html = `<div class="g">
+    <div class="s12 kpis">${kpi('Registry', fmt(r.total), 'cleared all four gates', {accent: 1})}${kpi('Counties', fmt(top.length), 'with at least one owner')}${kpi('Top 5 counties', pctf(sum(top.slice(0, 5).map(x => x[1])), r.total, 0), 'share of the registry')}${kpi('In play', fmt(ipt), 'owners in the live sequences')}${kpi('With email', fmt(L.with_email), L.with_email != null && ipt ? pctf(L.with_email, ipt, 0) + ' of in play' : '')}${kpi('With LinkedIn', fmt(L.with_linkedin), L.with_linkedin != null && ipt ? pctf(L.with_linkedin, ipt, 0) + ' of in play' : 'enrichment pending')}</div>
+    ${panel({span: 12, title: 'Texas owner map', sub: `${esc(r.gates || '')} · hover any county`, src: 'list', body: `<div class="map big" id="tr-map"></div>${mapLegend()}`})}
+    ${panel({span: 5, title: 'County leaderboard', sub: 'Top 15 of ' + top.length, body: hbars(top.slice(0, 15))})}
+    ${panel({span: 7, title: 'By metro', sub: 'Where the owners are', body: '<div class="ch" id="tr-metro" style="height:300px"></div>'})}
+    ${panel({span: 4, title: 'Years trading', sub: 'His preferred band: 10–30 years', body: '<div class="ch" id="tr-age" style="height:200px"></div>'})}
+    ${panel({span: 4, title: 'Fit score', sub: 'Share of ICP criteria met before enrichment', body: '<div class="ch" id="tr-match" style="height:230px"></div>'})}
+    ${panel({span: 4, title: 'Sector mix', sub: 'Top 8 sectors', body: '<div class="ch" id="tr-sec" style="height:230px"></div>'})}
+    ${panel({span: 6, title: 'Best way to reach them', sub: 'Channel available per business', body: '<div class="ch" id="tr-ch" style="height:200px"></div>'})}
+    ${panel({span: 6, title: 'Owner tables', sub: 'Both · business · property owners', body: `<div class="tw"><table class="tbl"><thead><tr><th>Segment</th><th class="n">Universe</th><th class="n">In play</th><th>Share in play</th></tr></thead><tbody>${[['Own business + property', 'both_owners'], ['Business owners', 'business_owners'], ['Property owners', 'property_owners']].map(([l, k]) => `<tr><td>${l}</td><td class="n">${fmt(u[k])}</td><td class="n">${fmt(ip[k])}</td><td><div style="display:flex;gap:10px;align-items:center">${bar(ip[k], ipt)}<span style="font:10.5px var(--mono);color:var(--mute)">${pctf(ip[k], ipt, 0)}</span></div></td></tr>`).join('')}</tbody></table></div>${L.note ? `<div class="note">${esc(L.note)}</div>` : ''}`})}
+  </div>`;
+  const draw = () => {
+    txMap($('#tr-map'), r.by_county, {pillars: 16, labels: 6});
+    bars3d($('#tr-metro'), Object.entries(r.by_metro || {}).map(([k, v], i) => ({label: k, value: v, color: mix(C.sig, C.gold, i / 4)})));
+    donut($('#tr-age'), Object.entries(r.by_age || {}).map(([k, v], i) => ({label: k + ' yrs', value: v, color: [C.amber, C.sig, C.gold, '#6b6560'][i % 4]})));
+    bars3d($('#tr-match'), Object.entries(r.by_match || {}).map(([k, v], i) => ({label: k, value: v, color: mix(C.sig, '#6b6560', i / 4)})));
+    radar($('#tr-sec'), Object.entries(r.by_sector || {}).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({label: k.replace(' / Home Services', ''), value: v})));
+    donut($('#tr-ch'), Object.entries(r.by_channel || {}).map(([k, v], i) => ({label: k, value: v, color: [C.sig, C.amber, C.gold, '#b8663f', '#6b6560'][i % 5]})));
+  };
+  return {html, draw};
+}
+
+function pWebsite() {
+  const w = D.website || {}, dl = w.daily || [], src = w.sources;
+  const html = `<div class="g">
+    <div class="s12 kpis k4">${kpi('Visits', fmt(w.visits_30d), 'last 30 days', {id: 'w1'})}${kpi('Form fills', fmt(w.form_fills_30d), 'seller + buyer forms', {accent: 1})}${kpi('Conversion', pctf(w.form_fills_30d, w.visits_30d), 'forms ÷ visits')}${kpi('Status', {live: 'Live', not_built: 'In build'}[w.status] || esc(w.status || '—'), esc(w.note || ''))}</div>
+    ${panel({span: 8, title: 'Traffic', sub: 'Daily visits and form fills', src: 'website', body: dl.length ? legend([['Visits', C.sig], ['Form fills (right axis)', C.gold]]) + '<div class="ch" id="ws-daily" style="height:260px"></div>' : empty('Traffic appears once the seller site is live and GA4 is connected', 'GA4 Data API · runReport')})}
+    ${panel({span: 4, title: 'Where visitors come from', sub: 'Last 30 days', body: src ? '<div class="ch" id="ws-src" style="height:260px"></div>' : empty('Source split (LinkedIn, email, organic, direct) comes from GA4')})}
+  </div>`;
+  const draw = () => { spark($('#w1'), dl.map(d => d.visits || 0));
+    if (dl.length) lines($('#ws-daily'), dl.map(d => d.date), [{label: 'Visits', vals: dl.map(d => d.visits || 0), color: C.sig, fill: 1}, {label: 'Forms', vals: dl.map(d => d.forms || 0), type: 'bar', axis: 'r', color: C.gold}]);
+    if (src) donut($('#ws-src'), Object.entries(src).map(([k, v], i) => ({label: k, value: v, color: [C.sig, C.amber, C.gold, '#b8663f', '#6b6560'][i % 5]}))) };
+  return {html, draw};
+}
+
+const CATALOG = [
+  {k: 'instantly', logo: 'In', name: 'Instantly', kind: 'API v2 · Bearer key', ep: ['GET /api/v2/campaigns', 'GET /api/v2/campaigns/analytics', 'GET /api/v2/campaigns/analytics/daily', 'GET /api/v2/campaigns/analytics/steps', 'GET /api/v2/accounts'],
+    un: [['Campaign table: sent, contacted, replies, opportunities, bounces', d => d.instantly.campaigns.some(c => c.sent)], ['Daily send + reply volume, send calendar', d => d.instantly.daily.some(x => x.sent)],
+         ['Sequence step performance', d => (d.instantly.steps || []).length], ['Inbox warm-up scores', d => (d.instantly.inboxes || []).some(x => x.warmup != null)]]},
+  {k: 'heyreach', logo: 'Hr', name: 'HeyReach', kind: 'Public API · X-API-KEY', ep: ['POST /api/public/campaign/GetAll', 'POST /api/public/stats/GetOverallStats', 'POST /api/public/li_account/GetAll'],
+    un: [['Requests, acceptances, messages, replies, profile views', d => d.heyreach.requests_sent], ['Daily LinkedIn activity', d => d.heyreach.daily.some(x => x.requests)],
+         ['Per-campaign progress', d => (d.heyreach.campaigns || []).length], ['Sender account status', d => d.heyreach.accounts]]},
+  {k: 'ghl', logo: 'G', name: 'GoHighLevel', kind: 'API v2 · private integration token + location ID', ep: ['GET /opportunities/pipelines + /search', 'POST /locations/{id}/tasks/search', 'GET /workflows/', 'GET /calendars/ + /calendars/events', 'GET /conversations/search'],
+    un: [['Seller + buyer pipelines by stage, value', d => d.ghl.seller.some(s => s.count)], ['Pipeline activity feed', d => (d.ghl.activity || []).length], ['Tasks: open, due, overdue, completed', d => d.ghl.tasks],
+         ['Workflows + status', d => (d.ghl.workflows || []).length], ['Appointments: booked, showed, no-show, upcoming', d => d.ghl.appointments], ['Conversations by channel, unread', d => d.ghl.conversations]]},
+  {k: 'content', logo: 'Li', name: 'LinkedIn content', kind: 'Manual · weekly · no API for personal profiles', ep: ['manual.json → content'],
+    un: [['Followers + 30-day growth', d => d.content.followers != null], ['Impressions + post count', d => d.content.impressions_30d != null], ['Post log', d => (d.content.posts || []).length], ['Daily audience curve', d => (d.content.daily || []).length]]},
+  {k: 'website', logo: 'W', name: 'Website', kind: 'GA4 Data API + GHL forms · once the site is live', ep: ['GA4 properties/{id}:runReport', 'GHL form submissions'],
+    un: [['Visits + form fills', d => d.website.visits_30d != null], ['Daily traffic', d => (d.website.daily || []).length], ['Traffic sources', d => d.website.sources]]},
+  {k: 'list', logo: 'TX', name: 'Owner list', kind: 'Texas registry + BigQuery owner tables', ep: ['registry.csv → county, metro, sector aggregates', 'BigQuery owner tables → in play'],
+    un: [['County map + leaderboard', d => d.list.registry && d.list.registry.by_county], ['Metro, sector, age, fit mix', d => d.list.registry && d.list.registry.by_metro], ['In-play segments', d => d.list.in_play], ['Enrichment coverage', d => d.list.with_email != null]]},
+];
+function pIntegrations() {
+  const html = `<div class="g">
+    ${CATALOG.map(x => { const api = API.includes(x.k), con = api ? !!D[x.k].connected : true, b = D[x.k] || {};
+      return `<section class="glass intg s6"><div class="ih"><div class="logo">${x.logo}</div><div><h3>${x.name}</h3><p>${x.kind}</p></div>${srcChip(x.k)}</div>
+        <div class="kl">${api ? `Last sync · ${lastSync(x.k)}` : `Updated · ${lastSync(x.k)}`}${b.error ? ` · <span style="color:var(--err)">${esc(b.error.slice(0, 90))}</span>` : ''}</div>
+        <div class="ep">${x.ep.map(e => `<span>${esc(e)}</span>`).join('')}</div>
+        <div class="kl" style="margin-bottom:9px">What it shows</div>
+        <div class="un">${x.un.map(([l, f]) => { let h = false; try { h = !!f(D) } catch (e) {} const st = con && h ? 'on' : !con ? 'wait' : 'miss';
+          return `<div class="${st}"><i>${st === 'on' ? '✓' : st === 'miss' ? '!' : '○'}</i><span>${l}${st === 'miss' ? ' <em style="color:var(--dim);font-style:normal">· no data yet</em>' : ''}</span></div>` }).join('')}</div></section>` }).join('')}
+    ${panel({span: 12, title: 'How a source goes live', sub: 'Keys never reach this page: a sync job reads the APIs and publishes aggregates only', body: `<div class="steps"><div><b>Add the key</b><span>API key or token goes into the sync job's secrets. Nothing is stored in the browser.</span></div><div><b>Sync pulls the numbers</b><span>Counts and rates only: no names, emails or deal titles leave the CRM.</span></div><div><b>The page lights up</b><span>Every panel tied to that source switches from “not connected” to live on the next sync.</span></div></div>`})}
+  </div>`;
+  return {html, draw: () => {}};
+}
+
+const ICON = {
+  overview: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  email: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
+  content: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  pipeline: '<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>',
+  followups: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>',
+  calls: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  territory: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  website: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  integrations: '<path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0zM12 16v5"/>',
+};
+const PAGES = [
+  {id: 'overview', label: 'Overview', grp: 'Command', fn: pOverview},
+  {id: 'email', label: 'Email', grp: 'Outreach', src: 'instantly', fn: pEmail},
+  {id: 'linkedin', label: 'LinkedIn outreach', src: 'heyreach', fn: pLinkedin},
+  {id: 'content', label: 'LinkedIn content', src: 'content', fn: pContent},
+  {id: 'pipeline', label: 'CRM pipeline', grp: 'Revenue', src: 'ghl', fn: pPipeline},
+  {id: 'followups', label: 'Follow-ups & automations', src: 'ghl', fn: pFollow},
+  {id: 'calls', label: 'Calls', src: 'ghl', fn: pCalls},
+  {id: 'territory', label: 'Territory', grp: 'Market', src: 'list', fn: pTerritory},
+  {id: 'website', label: 'Website', src: 'website', fn: pWebsite},
+  {id: 'integrations', label: 'Integrations', grp: 'System', fn: pIntegrations},
+];
+
+function route() {
+  const id = location.hash.slice(1) || 'overview', p = PAGES.find(x => x.id === id) || PAGES[0];
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.id === p.id));
+  $('#ptitle').textContent = p.label;
+  let r; try { r = p.fn() } catch (e) { console.error(e); $('#view').innerHTML = `<div class="err">This view failed to render · ${esc(e.message)}</div>`; return }
+  $('#view').innerHTML = r.html;
+  document.querySelectorAll('#view .glass').forEach((e, i) => e.style.animationDelay = i * 35 + 'ms');
+  CUR = r.draw; requestAnimationFrame(() => { try { r.draw() } catch (e) { console.error(e) } });
+  $('#main').scrollTop = 0; window.scrollTo(0, 0);
+  document.title = p.label + ' · Newton Control Room';
+}
+
+function chrome() {
+  $('#nav').innerHTML = PAGES.map(p => `${p.grp ? `<div class="grp">${p.grp}</div>` : ''}<a href="#${p.id}" data-id="${p.id}"><svg viewBox="0 0 24 24">${ICON[p.id]}</svg>${p.label}${p.src ? `<span class="d ${srcState(p.src).c}"></span>` : ''}</a>`).join('');
+  $('#machs').textContent = D.machine_live_since ? 'Live since ' + dshort(D.machine_live_since) : 'Built · launch pending';
+  $('#machd').textContent = `${API.filter(k => D[k].connected).length} of 3 APIs connected`;
+  $('#syncp').innerHTML = `<span class="d ${API.some(k => D[k].connected) ? 'live' : ''}"></span>Data ${ago(D.generated_at)}`;
+  const dl = $('#demolink'); dl.textContent = DEMO ? '← Back to live data' : 'Preview with demo data →'; dl.href = (DEMO ? location.pathname : '?demo') + location.hash;
+  $('#demopill').hidden = !DEMO;
+  const tick = () => $('#clock').textContent = 'Texas ' + new Date().toLocaleTimeString('en-US', {timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit'}) + ' CT';
+  tick(); setInterval(tick, 3e4);
+}
+
+/* sample numbers for ?demo: shows what the room looks like with the machine running */
+function demo(d) {
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const dd = d.instantly.daily.map(x => x.date), ramp = i => Math.min(1, i / 8), now = new Date().toISOString(), agoH = h => new Date(Date.now() - h * 36e5).toISOString();
+  d.machine_live_since = dd[2];
+  API.forEach(k => { d[k].connected = true; d[k].synced_at = now; delete d[k].error });
+  d.instantly.status = 'live';
+  d.instantly.daily = dd.map((dt, i) => { const wd = new Date(dt + 'T12:00').getDay(), on = i > 1 && wd >= 1 && wd <= 5;
+    const sent = on ? Math.round((wd >= 2 && wd <= 4 ? 240 : 150) * ramp(i) + r() * 30) : 0; return {date: dt, sent, replies: on ? Math.round(sent * (.02 + r() * .03)) : Math.round(r() * 2)} });
+  const ts = sum(d.instantly.daily, 'sent'), rep = sum(d.instantly.daily, 'replies'), w = [.42, .38, .2];
+  d.instantly.campaigns = d.instantly.campaigns.map((c, i) => ({...c, status: 'live', in_campaign: [400, 400, 200][i], contacted: Math.round([400, 400, 200][i] * [.86, .81, .74][i]),
+    sent: Math.round(ts * w[i]), replies: Math.round(rep * w[i]), positive: Math.round(rep * w[i] * [.41, .33, .27][i]), bounced: Math.round(ts * w[i] * [.009, .012, .016][i]), unsubscribed: Math.round(ts * w[i] * .004)}));
+  d.instantly.steps = [[1, .46, .55], [2, .31, .29], [3, .23, .16]].map(([k, a, b]) => ({step: k, sent: Math.round(ts * a), replies: Math.round(rep * b)}));
+  d.instantly.inboxes = d.instantly.inboxes.map(x => ({...x, warmup: 95 + Math.round(r() * 5), ok: true}));
+  d.heyreach.status = 'live';
+  d.heyreach.daily = dd.map((dt, i) => ({date: dt, requests: i > 3 ? Math.round(18 + r() * 7) : 0, replies: i > 5 ? Math.round(r() * 4) : 0}));
+  d.heyreach.requests_sent = sum(d.heyreach.daily, 'requests'); d.heyreach.accepted = Math.round(d.heyreach.requests_sent * .31);
+  d.heyreach.messages_sent = Math.round(d.heyreach.accepted * .94); d.heyreach.replies = sum(d.heyreach.daily, 'replies'); d.heyreach.profile_views = 214;
+  d.heyreach.campaigns = [['C1 · Both owners', 400, 164, 188, 42, 6], ['C1 · Business owners', 400, 139, 201, 51, 9], ['C1 · Property owners', 200, 71, 92, 33, 4]]
+    .map(([name, total, finished, in_progress, pending, failed]) => ({name, status: 'live', total, finished, in_progress, pending, failed}));
+  d.heyreach.accounts = {total: 1, active: 1};
+  d.ghl.status = 'live';
+  const sc = [0, 0, 19, 9, 6, 4, 3, 2, 2, 1, 1, 0, 0], sv = [0, 0, 0, 14.2e6, 9.8e6, 7.1e6, 5.4e6, 3.9e6, 4.2e6, 2.6e6, 2.1e6, 0, 0], dc = [7, 4, 3, 2, 1, 1, 0, 0, 0];
+  d.ghl.seller = d.ghl.seller.map((x, i) => ({...x, count: sc[i] || 0, value: sv[i] || 0}));
+  d.ghl.deal = d.ghl.deal.map((x, i) => ({...x, count: dc[i] || 0, value: dc[i] ? dc[i] * 1.4e6 : 0}));
+  d.ghl.activity = [[3, 'A seller moved to Discovery Call Booked'], [9, 'A seller moved to Valuation in Progress'], [20, 'A buyer moved to Qualified'], [27, 'A seller moved to Listing Agreement Sent'],
+    [49, 'A seller moved to Signed — Listing Live'], [70, 'A seller moved to Discovery Call Held'], [96, 'A buyer moved to Tour / Site Visit'], [120, 'A seller moved to Conversation Started']].map(([h, t]) => ({at: agoH(h), text: t}));
+  d.ghl.tasks = {open: 23, due_today: 6, overdue: 3, completed_30d: 58};
+  d.ghl.workflows = [['Email reply → seller opportunity', 'published', 'Creates the opportunity and alerts Issac within a minute'], ['Discovery call booked → confirm + remind', 'published', 'Confirmation email, SMS 24h and 1h before'],
+    ['No-show → re-book', 'published', 'Three touches over five days with the booking link'], ['Valuation sent → follow-up', 'published', 'Day 2, 5 and 10 check-ins'],
+    ['Listing agreement sent → nudge', 'draft', 'Reminder on day 2 and day 5'], ['Closed → referral ask', 'draft', 'Asks for an introduction 30 days after close']].map(([name, status, does]) => ({name, status, does}));
+  d.ghl.conversations = {total: 64, unread: 5, by_channel: {Email: 41, SMS: 17, Call: 6}, awaiting_us: 9, awaiting_them: 55};
+  const ad = dd.map((dt, i) => { const wd = new Date(dt + 'T12:00').getDay(); return {date: dt, booked: i > 6 && wd >= 1 && wd <= 5 ? Math.round(r() * 2.2) : 0} });
+  const bk = sum(ad, 'booked'), up = [26, 31, 50, 76, 98, 121].map(h => new Date(Date.now() + h * 36e5).toISOString());
+  d.ghl.appointments = {booked_30d: bk, showed: Math.round(bk * .68), no_show: Math.round(bk * .16), cancelled: Math.round(bk * .06), upcoming: up, daily: ad};
+  d.list.with_email = 842; d.list.with_linkedin = 611;
+  d.content = {...d.content, status: 'live', followers: 2431, followers_delta_30d: 187, posts_30d: 12, impressions_30d: 41800,
+    daily: dd.map((dt, i) => ({date: dt, followers: 2244 + Math.round(i * 6.2 + r() * 4), impressions: Math.round(600 + r() * 1400 + (i % 3 === 0 ? 1800 : 0))})),
+    posts: [[27, 'Why owners sell the building and the business separately', 6120, 142, 31], [24, 'The two numbers every Texas business owner should know', 4870, 98, 22],
+            [20, 'What a buyer actually checks in the first 10 minutes', 3950, 77, 18], [16, 'Selling at 62: the timeline nobody explains', 3310, 64, 11], [12, 'Lease vs own: how it moves your sale price', 2880, 51, 9]]
+      .map(([k, title, impressions, reactions, comments]) => ({date: dd[k], title, impressions, reactions, comments}))};
+  d.website = {...d.website, status: 'live', visits_30d: 1284, form_fills_30d: 17, daily: dd.map((dt, i) => ({date: dt, visits: Math.round(25 + r() * 30 + i * .6), forms: r() > .55 ? Math.round(r() * 2) : 0})),
+    sources: {LinkedIn: 412, Email: 356, Direct: 281, Organic: 164, Referral: 71}};
+  d.generated_at = now;
+  return d;
+}
+
+/* pointer: glass spotlight, KPI tilt, tooltips */
+document.addEventListener('pointermove', e => {
+  const c = e.target.closest && e.target.closest('.glass');
+  if (c) { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    if (c.classList.contains('tilt')) { const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5; c.style.transform = `perspective(900px) rotateX(${-py * 7}deg) rotateY(${px * 9}deg)` } }
+  const t = e.target.closest && e.target.closest('[data-tip]'), tip = $('#tip');
+  if (!t) { tip.style.opacity = 0; return }
+  tip.innerHTML = t.dataset.tip; tip.style.opacity = 1;
+  let x = e.clientX + 14, y = e.clientY + 16; if (x + tip.offsetWidth > innerWidth - 8) x = e.clientX - tip.offsetWidth - 14; if (y + tip.offsetHeight > innerHeight - 8) y = e.clientY - tip.offsetHeight - 12;
+  tip.style.transform = `translate(${x}px,${y}px)`;
+});
+document.addEventListener('pointerout', e => { const c = e.target.closest && e.target.closest('.tilt'); if (c && !c.contains(e.relatedTarget)) c.style.transform = '' });
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => CUR && CUR(), 150) });
+addEventListener('hashchange', route);
+
+fetch('data.json?t=' + Date.now()).then(r => r.json()).then(d => {
+  D = DEMO ? demo(d) : d;
+  chrome(); route();
+}).catch(e => { $('#view').innerHTML = `<div class="err">Could not load data.json · ${esc(e.message)}</div>` });
+</script>
+</body>
+</html>
