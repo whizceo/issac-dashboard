@@ -498,7 +498,7 @@ function pOverview() {
   const html = `<div class="g">
     <div class="s12 kpis">${kpi('Emails sent', fmt(m.sent), `${fmt(m.contacted)} owners contacted`, {id: 'k1'})}${kpi('Email reply rate', pctf(m.replies, m.contacted), `${fmt(m.replies)} replies · ${fmt(m.positive)} positive`, {id: 'k2'})}${kpi('LinkedIn accepted', fmt(m.liAcc), `${pctf(m.liAcc, m.liReq)} of ${fmt(m.liReq)} requests`, {id: 'k3'})}${kpi('In conversation', fmt(m.conv), `${money(m.sVal)} seller pipeline`)}${kpi('Discovery calls', fmt(m.booked), 'booked · CRM stage')}${kpi('Listings signed', fmt(m.signed), `${fmt(m.closed)} closed`, {accent: 1})}</div>
     ${panel({span: 8, cls: 'fill', title: 'Territory · Texas', sub: `${fmt(reg.total)} owner businesses cleared the gates · pillars mark the 12 densest counties`, src: 'list', body: `<div class="map" id="ov-map"></div>${mapLegend()}`})}
-    <div class="s4 col">${panel({title: 'Sync health', sub: 'Sources feeding this room', body: `<div class="ringrow"><div class="ring" id="ov-ring"></div><div class="srcl">${['instantly', 'heyreach', 'ghl', 'content', 'website', 'list'].map(k => `<div>${srcChip(k)}<span>${lastSync(k)}</span></div>`).join('')}</div></div>`})}
+    <div class="s4 col">${panel({title: 'Sync health', sub: 'Sources feeding this room', body: `<div class="ringrow"><div class="ring" id="ov-ring"></div><div class="srcl">${['instantly', 'heyreach', 'ghl', 'list'].map(k => `<div>${srcChip(k)}<span>${lastSync(k)}</span></div>`).join('')}</div></div>`})}
       ${panel({title: 'Live activity', sub: 'Latest pipeline moves', src: 'ghl', body: feed(6)})}</div>
     ${panel({span: 7, title: 'Seller journey', sub: 'Owners in play → listing signed, both channels', body: '<div class="ch" id="ov-fun" style="height:340px"></div>'})}
     ${panel({span: 5, title: 'Where replies come from', sub: 'Email vs LinkedIn', body: `<div class="ch" id="ov-dn" style="height:190px"></div><div class="stats" style="margin-top:18px"><div class="stat"><span class="kl">Seller pipeline</span><b>${money(m.sVal)}</b></div><div class="stat"><span class="kl">Buyer pipeline</span><b>${money(m.dVal)}</b></div><div class="stat"><span class="kl">Owners in play</span><b>${fmt(m.inPlay)}</b></div></div>`})}
@@ -704,10 +704,6 @@ const CATALOG = [
     un: [['Seller + buyer pipelines by stage, value', d => d.ghl.seller.some(s => s.count)], ['Pipeline activity feed', d => (d.ghl.activity || []).length], ['Tasks: open, due, overdue, completed', d => d.ghl.tasks],
          ['Workflows + status', d => (d.ghl.workflows || []).length], ['Appointments: booked, showed, no-show, upcoming', d => d.ghl.appointments], ['Conversations by channel, unread', d => d.ghl.conversations],
          ['Seller Outreach + Marketing pipelines', d => (d.ghl.outreach || []).length && (d.ghl.marketing || []).length], ['Contacts: total, new, source', d => d.ghl.contacts], ['Form submissions', d => d.ghl.forms]]},
-  {k: 'content', logo: 'Li', name: 'LinkedIn content', kind: 'Manual · weekly · no API for personal profiles', ep: ['manual.json → content'],
-    un: [['Followers + 30-day growth', d => d.content.followers != null], ['Impressions + post count', d => d.content.impressions_30d != null], ['Post log', d => (d.content.posts || []).length], ['Daily audience curve', d => (d.content.daily || []).length]]},
-  {k: 'website', logo: 'W', name: 'Website', kind: 'GA4 Data API + GHL forms · once the site is live', ep: ['GA4 properties/{id}:runReport', 'GHL form submissions'],
-    un: [['Visits + form fills', d => d.website.visits_30d != null], ['Daily traffic', d => (d.website.daily || []).length], ['Traffic sources', d => d.website.sources]]},
   {k: 'list', logo: 'TX', name: 'Owner list', kind: 'Texas registry + BigQuery owner tables', ep: ['registry.csv → county, metro, sector aggregates', 'BigQuery owner tables → in play'],
     un: [['County map + leaderboard', d => d.list.registry && d.list.registry.by_county], ['Metro, sector, age, fit mix', d => d.list.registry && d.list.registry.by_metro], ['In-play segments', d => d.list.in_play], ['Enrichment coverage', d => d.list.with_email != null]]},
 ];
@@ -742,13 +738,13 @@ const PAGES = [
   {id: 'overview', label: 'Overview', grp: 'Command', fn: pOverview},
   {id: 'email', label: 'Email', grp: 'Outreach', src: 'instantly', fn: pEmail},
   {id: 'linkedin', label: 'LinkedIn outreach', src: 'heyreach', fn: pLinkedin},
-  {id: 'content', label: 'LinkedIn content', src: 'content', fn: pContent},
+  // {id: 'content', label: 'LinkedIn content', src: 'content', fn: pContent},  // hidden until LinkedIn content is connected
   {id: 'pipeline', label: 'CRM pipeline', grp: 'Revenue', src: 'ghl', fn: pPipeline},
   {id: 'followups', label: 'Follow-ups & automations', src: 'ghl', fn: pFollow},
   {id: 'calls', label: 'Calls', src: 'ghl', fn: pCalls},
   {id: 'contacts', label: 'Contacts & forms', src: 'ghl', fn: pContacts},
   {id: 'territory', label: 'Territory', grp: 'Market', src: 'list', fn: pTerritory},
-  {id: 'website', label: 'Website', src: 'website', fn: pWebsite},
+  // {id: 'website', label: 'Website', src: 'website', fn: pWebsite},  // hidden until the site is live
   {id: 'integrations', label: 'Integrations', grp: 'System', fn: pIntegrations},
 ];
 
